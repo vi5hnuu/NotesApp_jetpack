@@ -81,7 +81,10 @@ fun NoteScreen(){
                        .padding(7.dp)){
                         itemsIndexed(notes){
                             index,item -> NoteCard(note=item,
-                            onDelete = {id->viewModel.removeNote(id)},
+                            onDelete = {id->
+                                viewModel.removeNote(id)
+                                if(isEditing.value) noteState.value=Note()
+                                       },
                             onEdit = {id->
                                 val note=notes.find { note->note.id==id }!!
                                 noteState.value=note.copy();
