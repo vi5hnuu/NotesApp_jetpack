@@ -1,11 +1,16 @@
 package com.vi5hnu.notesapp.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
@@ -14,9 +19,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +39,7 @@ import java.util.Locale
 import java.util.UUID
 
 @Composable
-fun NoteCard(note:Note,onDelete:(id:UUID)->Unit) {
+fun NoteCard(note:Note,onDelete:(id:UUID)->Unit,onEdit:(id:UUID)->Unit) {
     Box{
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(0.1f)),
@@ -55,12 +62,26 @@ fun NoteCard(note:Note,onDelete:(id:UUID)->Unit) {
                     textAlign = TextAlign.Justify,
                     modifier = Modifier.padding(bottom = 5.dp),
                 )
-                Text(
-                    text = SimpleDateFormat("dd MMMM yyy",Locale.ENGLISH).format(note.createdAt),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.End,
-                    fontWeight = FontWeight.ExtraLight
-                )
+                Row(
+                    modifier=Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+
+                    Box(modifier=Modifier
+                        .clip(shape = RoundedCornerShape(CornerSize(7.dp)))
+                        .clickable { onEdit(note.id) }){
+                        Text(
+                            text = "Edit",
+                            modifier=Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            textDecoration = TextDecoration.Underline)
+                    }
+                    Text(
+                        text = SimpleDateFormat("dd MMMM yyy",Locale.ENGLISH).format(note.createdAt),
+                        textAlign = TextAlign.End,
+                        fontWeight = FontWeight.ExtraLight
+                    )
+
+                }
             }
         }
         IconButton(

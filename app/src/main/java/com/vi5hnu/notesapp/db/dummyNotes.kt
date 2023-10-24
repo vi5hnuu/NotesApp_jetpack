@@ -1,4 +1,4 @@
-package com.vi5hnu.notesapp.data
+package com.vi5hnu.notesapp.db
 
 import com.vi5hnu.notesapp.model.Note
 

@@ -1,9 +1,11 @@
 package com.vi5hnu.notesapp.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,8 +15,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,19 +26,14 @@ import com.vi5hnu.notesapp.R
 import com.vi5hnu.notesapp.model.Note
 
 @Composable
-fun NoteForm(onCreate:(note:Note)->Unit) {
-    val titleState= remember {
-        mutableStateOf("")
-    }
-    val descriptionState= remember {
-        mutableStateOf("")
-    }
+fun NoteForm(noteState:MutableState<Note>, isEditing:MutableState<Boolean>, onCreateOrUpdate:()->Unit) {
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            value = titleState.value,
+            value = noteState.value.title,
             label = { Text(text = "Title") },
-            onValueChange = { title -> titleState.value = title },
+            onValueChange = { title -> noteState.value=noteState.value.copy(title=title)},
             singleLine = true,
             placeholder = { Text(text = "what i learn today ...") },
             leadingIcon = {
@@ -55,9 +50,9 @@ fun NoteForm(onCreate:(note:Note)->Unit) {
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth(),
-            value = descriptionState.value,
+            value = noteState.value.description,
             label = { Text(text = "Description") },
-            onValueChange = { desc -> descriptionState.value = desc },
+            onValueChange = { desc -> noteState.value=noteState.value.copy(description=desc) },
             singleLine = false,
             minLines = 2,
             maxLines = 5,
@@ -75,17 +70,29 @@ fun NoteForm(onCreate:(note:Note)->Unit) {
             )
         )
         Spacer(modifier = Modifier.height(7.dp))
-        ElevatedButton(
-            modifier = Modifier,
-            shape = RoundedCornerShape(CornerSize(5.dp)),
-            enabled = titleState.value.trim().isNotEmpty() && descriptionState.value.trim()
-                .isNotEmpty(),
-            onClick = {
-                onCreate(Note(title = titleState.value, description = descriptionState.value));
-                titleState.value="";
-                descriptionState.value="";
-            }) {
-            Text(text = "Create Note")
+        Row {
+            ElevatedButton(
+                modifier = Modifier,
+                shape = RoundedCornerShape(CornerSize(5.dp)),
+                enabled = noteState.value.title.trim().isNotEmpty() && noteState.value.description.trim()
+                    .isNotEmpty(),
+                onClick = {
+                    onCreateOrUpdate();
+                    noteState.value=Note();
+                }) {
+                Text(text = if(isEditing.value) "Update Note" else "Create Note")
+            }
+            Spacer(modifier = Modifier.width(7.dp))
+            ElevatedButton(
+                modifier = Modifier,
+                shape = RoundedCornerShape(CornerSize(5.dp)),
+                enabled = noteState.value.title.trim().isNotEmpty() || noteState.value.description.trim()
+                    .isNotEmpty(),
+                onClick = {
+                    noteState.value=Note();
+                }) {
+                Text(text = if(isEditing.value) "Cancel Update" else "Reset")
+            }
         }
     }
 }
