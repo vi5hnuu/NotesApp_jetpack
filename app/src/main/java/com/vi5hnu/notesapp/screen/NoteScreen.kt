@@ -1,6 +1,7 @@
 package com.vi5hnu.notesapp.screen
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -54,17 +56,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.vi5hnu.notesapp.R
 import com.vi5hnu.notesapp.components.NoteCard
+import com.vi5hnu.notesapp.components.NoteForm
 import com.vi5hnu.notesapp.data.DummyData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(navController: NavController){
-    val titleState= remember {
-        mutableStateOf("")
-    }
-    val descriptionState= remember {
-        mutableStateOf("")
-    }
+    val viewModel=NoteViewModel()
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(
@@ -93,56 +91,26 @@ fun NoteScreen(navController: NavController){
     }) {innerPadding->
         Surface(modifier=Modifier.padding(innerPadding)) {
             Column(modifier=Modifier.padding(12.dp)) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    OutlinedTextField(
-                        modifier=Modifier.fillMaxWidth(),
-                        value = titleState.value,
-                        label = { Text(text = "Title")},
-                        onValueChange ={title-> titleState.value=title },
-                        singleLine = true,
-                        placeholder = { Text(text = "what i learn today ...")},
-                        leadingIcon = {Icon(imageVector = ImageVector.vectorResource(id =R.drawable.note_edit), contentDescription = "note title icon")},
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next,keyboardType = KeyboardType.Text),
-                    )
-                    OutlinedTextField(
-                        modifier= Modifier
-                            .fillMaxWidth(),
-                        value = descriptionState.value,
-                        label = { Text(text = "Description")},
-                        onValueChange ={desc-> descriptionState.value=desc },
-                        singleLine = false,
-                        minLines = 2,
-                        maxLines = 5,
-                        placeholder = { Text(text = "The more that you read, the more things you will know. ...")},
-                        leadingIcon = {Icon(
-                            imageVector = ImageVector.vectorResource(id =R.drawable.note_icon),
-                            contentDescription = "note description icon",
-                            modifier = Modifier)},
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default,keyboardType = KeyboardType.Text)
-                    )
-                    Spacer(modifier = Modifier.height(7.dp))
-                    ElevatedButton(
-                        modifier=Modifier,
-                        shape = RoundedCornerShape(CornerSize(5.dp)),
-                        enabled = titleState.value.trim().isNotEmpty() && descriptionState.value.trim().isNotEmpty(),
-                        onClick = { /*TODO*/ }) {
-                        Text(text = "Create Note")
-                    }
-                }
+                NoteForm{note->viewModel.addNote(note)}
                 Divider(modifier = Modifier.padding(horizontal = 7.dp, vertical = 12.dp))
-                ElevatedCard( elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.5.dp)){
-                    LazyColumn(modifier= Modifier
+                val notes=viewModel.getNotes();
+                if(notes.isNotEmpty()) ElevatedCard( elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.5.dp)){
+                   LazyColumn(modifier= Modifier
                         .fillMaxSize()
                         .padding(7.dp)){
-                        val notes=DummyData.getNotes();
                         itemsIndexed(notes){
-                            index,item -> NoteCard(note=item){};
+                            index,item -> NoteCard(note=item){id->viewModel.removeNote(id)};
                             if(index!=notes.lastIndex) Spacer(modifier = Modifier.height(7.dp))
                         }
                     }
                 }
+                else Text(text = "\uD83D\uDE14 add some notes \uD83D\uDE14".uppercase(),
+                    modifier=Modifier.fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    textAlign = TextAlign.Center)
             }
         }
     }
 }
+
 
