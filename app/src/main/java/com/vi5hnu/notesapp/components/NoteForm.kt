@@ -90,6 +90,7 @@ fun NoteForm(noteState:MutableState<Note>, isEditing:MutableState<Boolean>, onCr
                     .isNotEmpty(),
                 onClick = {
                     noteState.value=Note();
+                    if(isEditing.value) isEditing.value=false;
                 }) {
                 Text(text = if(isEditing.value) "Cancel Update" else "Reset")
             }
