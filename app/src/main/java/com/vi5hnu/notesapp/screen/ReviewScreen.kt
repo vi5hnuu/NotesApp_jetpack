@@ -54,9 +54,10 @@ fun ReviewScreen(
     modifier: Modifier = Modifier
 ) {
     val today = remember { todayStr() }
-    val inList: (Task) -> Boolean = { activeListId == "all" || it.listId == activeListId }
-    val overdue = tasks.filter { inList(it) && !it.done && it.due != null && diffDays(it.due, today) < 0 }
-        .sortedBy { it.due }
+    val overdue = remember(tasks, activeListId, today) {
+        tasks.filter { (activeListId == "all" || it.listId == activeListId) && !it.done && it.due != null && diffDays(it.due, today) < 0 }
+            .sortedBy { it.due }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),

@@ -102,7 +102,7 @@ fun TaskEditSheet(
     var subtasks by remember(task) {
         mutableStateOf(if (task != null) parseSubtasks(task.subtasks) else emptyList())
     }
-    var showCal by remember { mutableStateOf(false) }
+    var showCal by remember(task) { mutableStateOf(false) }
     var showMore by remember(task) {
         mutableStateOf(task != null && (task.notes.isNotBlank() || task.subtasks != "[]"))
     }
@@ -583,10 +583,13 @@ private fun MiniCalendar(
             }
         }
         Spacer(Modifier.height(12.dp))
-        val firstDow = Calendar.getInstance().apply { set(year, month, 1) }.get(Calendar.DAY_OF_WEEK) - 1
-        val daysInMonth = Calendar.getInstance().apply { set(year, month, 1) }.getActualMaximum(Calendar.DAY_OF_MONTH)
-        val cells = (0 until firstDow).map { null } + (1..daysInMonth).map { it }
-        val weeks = cells.chunked(7)
+        // Memoized — only recompute when the displayed month/year changes
+        val weeks = remember(year, month) {
+            val cal = Calendar.getInstance().apply { set(year, month, 1) }
+            val firstDow = cal.get(Calendar.DAY_OF_WEEK) - 1
+            val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+            ((0 until firstDow).map { null as Int? } + (1..daysInMonth).map { it }).chunked(7)
+        }
         Row(Modifier.fillMaxWidth()) {
             listOf("S","M","T","W","T","F","S").forEach { d ->
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {

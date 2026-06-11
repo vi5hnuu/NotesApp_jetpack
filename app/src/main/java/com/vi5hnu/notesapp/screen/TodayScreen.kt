@@ -104,6 +104,8 @@ fun TodayScreen(
     }
     val dueTodayCount = remember(todayTasks, overdue) { todayTasks.size + overdue.size }
     val totalActive = remember(tasks) { tasks.count { !it.done } }
+    // Memoize concatenation to avoid a new list allocation on every recomposition
+    val todayAndNoDate = remember(todayTasks, noDate) { todayTasks + noDate }
 
     var showDone by remember { mutableStateOf(false) }
 
@@ -257,11 +259,11 @@ fun TodayScreen(
         }
 
         // ---- Today section ----
-        if (todayTasks.isNotEmpty() || noDate.isNotEmpty()) {
+        if (todayAndNoDate.isNotEmpty()) {
             item {
-                SectionHead(label = "Today", count = todayTasks.size + noDate.size)
+                SectionHead(label = "Today", count = todayAndNoDate.size)
             }
-            items(todayTasks + noDate, key = { it.id }) { task ->
+            items(todayAndNoDate, key = { it.id }) { task ->
                 TaskRow(
                     task = task, lists = lists,
                     onToggle = { onToggle(task) },
