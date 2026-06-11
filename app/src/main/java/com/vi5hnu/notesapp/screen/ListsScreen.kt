@@ -30,9 +30,6 @@ import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
 import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.todayStr
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
 fun ListsScreen(

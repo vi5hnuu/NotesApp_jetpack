@@ -3,6 +3,7 @@ package com.vi5hnu.notesapp.screen
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,22 +22,29 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,14 +52,13 @@ import com.vi5hnu.notesapp.R
 import com.vi5hnu.notesapp.components.TaskRow
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
-import com.vi5hnu.notesapp.utils.addDays
 import com.vi5hnu.notesapp.utils.dateLabel
 import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.greeting
 import com.vi5hnu.notesapp.utils.longDate
 import com.vi5hnu.notesapp.utils.todayStr
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun TodayScreen(
     tasks: List<Task>,
@@ -65,7 +72,17 @@ fun TodayScreen(
 ) {
     val today = todayStr()
     val inList: (Task) -> Boolean = { activeListId == "all" || it.listId == activeListId }
-    val pool = tasks.filter(inList)
+
+    var searchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    val pool = tasks.filter {
+        inList(it) && (searchQuery.isBlank() ||
+            it.title.contains(searchQuery, ignoreCase = true) ||
+            it.notes.contains(searchQuery, ignoreCase = true))
+    }
 
     val overdue = pool.filter { !it.done && it.due != null && diffDays(it.due, today) < 0 }
         .sortedBy { it.due }
@@ -93,52 +110,107 @@ fun TodayScreen(
                 Modifier.fillMaxWidth().statusBarsPadding()
                     .padding(horizontal = 22.dp).padding(top = 10.dp, bottom = 4.dp)
             ) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Box(
-                            Modifier.size(17.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
-                            contentAlignment = Alignment.Center
+                if (searchActive) {
+                    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(13.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(0.6f)),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(
-                                ImageVector.vectorResource(R.drawable.note_edit), null,
-                                tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(11.dp)
-                            )
+                            Row(
+                                Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.Search, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                Box(Modifier.weight(1f)) {
+                                    BasicTextField(
+                                        value = searchQuery,
+                                        onValueChange = { searchQuery = it },
+                                        modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                                        textStyle = TextStyle(fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface),
+                                        singleLine = true
+                                    )
+                                    if (searchQuery.isEmpty()) {
+                                        Text("Search tasks...", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                if (searchQuery.isNotEmpty()) {
+                                    Surface(
+                                        onClick = { searchQuery = "" },
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Default.Close, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+                                }
+                            }
                         }
                         Text(
-                            "Tend", fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onBackground,
-                            style = MaterialTheme.typography.titleMedium
+                            "Cancel",
+                            Modifier.clickable { keyboard?.hide(); searchActive = false; searchQuery = "" },
+                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    Surface(
-                        onClick = { /* search */ },
-                        shape = RoundedCornerShape(13.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        modifier = Modifier.size(42.dp)
+                    Spacer(Modifier.height(10.dp))
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Search, null, modifier = Modifier.size(21.dp), tint = MaterialTheme.colorScheme.onSurface)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            Box(
+                                Modifier.size(17.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    ImageVector.vectorResource(R.drawable.note_edit), null,
+                                    tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(11.dp)
+                                )
+                            }
+                            Text(
+                                "Tend", fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onBackground,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Surface(
+                            onClick = { searchActive = true },
+                            shape = RoundedCornerShape(13.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Search, null, modifier = Modifier.size(21.dp), tint = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
                     }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        greeting(), fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.5).sp, lineHeight = 32.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        "${longDate()} · $dueTodayCount due today",
+                        fontSize = 14.5.sp, fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
                 }
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    greeting(), fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-0.5).sp, lineHeight = 32.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    "${longDate()} · $dueTodayCount due today",
-                    fontSize = 14.5.sp, fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(8.dp))
             }
         }
 
@@ -206,6 +278,7 @@ fun TodayScreen(
                     DayHead(
                         label = dateLabel(day),
                         count = dayTasks.size,
+                        suffix = "",
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
@@ -377,13 +450,16 @@ private fun CountBadge(count: Int) {
 }
 
 @Composable
-fun DayHead(label: String, count: Int, modifier: Modifier = Modifier) {
+fun DayHead(label: String, count: Int, suffix: String = "done", modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.width(10.dp))
         Surface(Modifier.weight(1f).height(1.dp), color = MaterialTheme.colorScheme.outline.copy(0.5f)) {}
         Spacer(Modifier.width(10.dp))
-        Text("$count done", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            if (suffix.isBlank()) "$count" else "$count $suffix",
+            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

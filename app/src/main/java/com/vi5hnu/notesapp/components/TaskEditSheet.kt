@@ -546,7 +546,6 @@ private fun MiniCalendar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val cal = Calendar.getInstance().apply { set(year, month, 1) }
             val monthNames = listOf("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
             Text(
                 "${monthNames[month]} $year",

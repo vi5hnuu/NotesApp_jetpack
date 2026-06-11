@@ -16,13 +16,17 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("tend_prefs", MODE_PRIVATE)
         setContent {
             val systemDark = isSystemInDarkTheme()
-            var darkTheme by remember { mutableStateOf(systemDark) }
+            var darkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", systemDark)) }
             NotesAppTheme(darkTheme = darkTheme) {
                 AppScreen(
                     darkTheme = darkTheme,
-                    onThemeToggle = { darkTheme = it }
+                    onThemeToggle = {
+                        darkTheme = it
+                        prefs.edit().putBoolean("dark_theme", it).apply()
+                    }
                 )
             }
         }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.repository.TaskRepository
+import com.vi5hnu.notesapp.utils.addDays
 import com.vi5hnu.notesapp.utils.nextOccurrence
 import com.vi5hnu.notesapp.utils.todayStr
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,12 +22,34 @@ class TaskViewModel @Inject constructor(private val repo: TaskRepository) : View
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks = _tasks.asStateFlow()
 
+    private var seeded = false
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             repo.getTasks()
                 .distinctUntilChanged()
-                .collect { _tasks.value = it }
+                .collect { list ->
+                    if (list.isEmpty() && !seeded) {
+                        seeded = true
+                        seedInitialData()
+                    } else {
+                        _tasks.value = list
+                    }
+                }
         }
+    }
+
+    private suspend fun seedInitialData() {
+        val today = todayStr()
+        listOf(
+            Task(title = "Morning workout", listId = "health", due = today, time = "07:00"),
+            Task(title = "Design review with the team", notes = "Bring the new flows", listId = "work", due = today, time = "14:30", priority = "high"),
+            Task(title = "Plan weekend trip", listId = "home", due = today),
+            Task(title = "Water the plants", listId = "home", due = today),
+            Task(title = "Buy groceries", listId = "groceries", due = addDays(today, 1)),
+            Task(title = "Team standup", listId = "work", due = addDays(today, 1), time = "09:00"),
+            Task(title = "Dentist appointment", listId = "health", due = addDays(today, 3), time = "10:00", priority = "med"),
+        ).forEach { repo.add(it) }
     }
 
     fun add(task: Task) = viewModelScope.launch { repo.add(task) }

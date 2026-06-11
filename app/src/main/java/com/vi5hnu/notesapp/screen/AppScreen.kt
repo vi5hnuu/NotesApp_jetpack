@@ -1,11 +1,15 @@
 package com.vi5hnu.notesapp.screen
 
+import android.content.Context
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -50,13 +54,25 @@ fun AppScreen(
     val tasks by viewModel.tasks.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("tend_prefs", Context.MODE_PRIVATE) }
 
     var selectedTab by remember { mutableStateOf(0) }
     var reviewing by remember { mutableStateOf(false) }
     var activeListId by remember { mutableStateOf("all") }
     var showSheet by remember { mutableStateOf(false) }
     var editingTask by remember { mutableStateOf<Task?>(null) }
-    var settings by remember { mutableStateOf(AppSettings()) }
+    var settings by remember {
+        mutableStateOf(
+            AppSettings(
+                rollover = prefs.getBoolean("s_rollover", true),
+                reminders = prefs.getBoolean("s_reminders", true),
+                streaks = prefs.getBoolean("s_streaks", true),
+                nudge = prefs.getBoolean("s_nudge", true),
+                archive = prefs.getBoolean("s_archive", false)
+            )
+        )
+    }
 
     val lists = DEFAULT_LISTS
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
@@ -127,7 +143,16 @@ fun AppScreen(
                 darkTheme = darkTheme,
                 onThemeToggle = onThemeToggle,
                 settings = settings,
-                onSettingsChange = { settings = it },
+                onSettingsChange = { s ->
+                    settings = s
+                    prefs.edit()
+                        .putBoolean("s_rollover", s.rollover)
+                        .putBoolean("s_reminders", s.reminders)
+                        .putBoolean("s_streaks", s.streaks)
+                        .putBoolean("s_nudge", s.nudge)
+                        .putBoolean("s_archive", s.archive)
+                        .apply()
+                },
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -180,14 +205,14 @@ private fun TendNav(selected: Int, reviewing: Boolean, onSelect: (Int) -> Unit) 
         NavigationBarItem(
             selected = selected == 1,
             onClick = { onSelect(1) },
-            icon = { Icon(ImageVector.vectorResource(R.drawable.note_edit), null, Modifier.size(23.dp)) },
+            icon = { Icon(Icons.Default.List, null, Modifier.size(23.dp)) },
             label = { Text("Lists", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = itemColors
         )
         NavigationBarItem(
             selected = selected == 2,
             onClick = { onSelect(2) },
-            icon = { Icon(ImageVector.vectorResource(R.drawable.note_icon), null, Modifier.size(23.dp)) },
+            icon = { Icon(Icons.Default.Check, null, Modifier.size(23.dp)) },
             label = { Text("Done", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = itemColors
         )
