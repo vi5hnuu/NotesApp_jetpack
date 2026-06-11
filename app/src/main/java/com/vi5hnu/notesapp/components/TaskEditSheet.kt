@@ -65,6 +65,7 @@ import com.vi5hnu.notesapp.model.parseSubtasks
 import com.vi5hnu.notesapp.utils.addDays
 import com.vi5hnu.notesapp.utils.calendarToIso
 import com.vi5hnu.notesapp.utils.dateLabel
+import com.vi5hnu.notesapp.utils.parseDate
 import com.vi5hnu.notesapp.utils.nextWeekend
 import com.vi5hnu.notesapp.utils.timeLabel
 import com.vi5hnu.notesapp.utils.todayStr
@@ -541,8 +542,14 @@ private fun MiniCalendar(
     modifier: Modifier = Modifier
 ) {
     val today = todayStr()
-    var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
-    var month by remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH)) }
+    // Start the calendar on the month that contains the currently selected date (if any)
+    val initCal = remember(selected) {
+        Calendar.getInstance().also { c ->
+            if (selected != null) runCatching { c.time = parseDate(selected) }
+        }
+    }
+    var year by remember(selected) { mutableStateOf(initCal.get(Calendar.YEAR)) }
+    var month by remember(selected) { mutableStateOf(initCal.get(Calendar.MONTH)) }
 
     Column(modifier) {
         Row(

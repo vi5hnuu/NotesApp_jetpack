@@ -161,7 +161,7 @@ private fun listEmoji(id: String) = when (id) {
 @Composable
 fun ProgressRing(pct: Float, color: Color, modifier: Modifier = Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Canvas(modifier = modifier) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
             val r = size.minDimension / 2f - 4.dp.toPx()
             val stroke = 4.dp.toPx()
             val trackColor = color.copy(alpha = 0.2f)

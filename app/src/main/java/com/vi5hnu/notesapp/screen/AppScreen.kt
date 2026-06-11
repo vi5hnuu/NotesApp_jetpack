@@ -3,7 +3,6 @@ package com.vi5hnu.notesapp.screen
 import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.todayStr
@@ -109,7 +108,7 @@ fun AppScreen(
         },
         bottomBar = {
             Column {
-                BannerAd(modifier = Modifier.fillMaxWidth())
+                BannerAd()
                 TendNav(
                     selected = selectedTab,
                     reviewing = reviewing,
