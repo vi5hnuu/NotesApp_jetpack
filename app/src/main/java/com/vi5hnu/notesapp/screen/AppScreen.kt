@@ -1,0 +1,202 @@
+package com.vi5hnu.notesapp.screen
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.vi5hnu.notesapp.R
+import com.vi5hnu.notesapp.components.TaskEditSheet
+import com.vi5hnu.notesapp.model.DEFAULT_LISTS
+import com.vi5hnu.notesapp.model.Task
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppScreen(
+    darkTheme: Boolean = false,
+    onThemeToggle: (Boolean) -> Unit = {}
+) {
+    val viewModel = viewModel<TaskViewModel>()
+    val tasks by viewModel.tasks.collectAsState()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedTab by remember { mutableStateOf(0) }
+    var reviewing by remember { mutableStateOf(false) }
+    var activeListId by remember { mutableStateOf("all") }
+    var showSheet by remember { mutableStateOf(false) }
+    var editingTask by remember { mutableStateOf<Task?>(null) }
+    var settings by remember { mutableStateOf(AppSettings()) }
+
+    val lists = DEFAULT_LISTS
+    val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            if (showFab) {
+                FloatingActionButton(
+                    onClick = { editingTask = null; showSheet = true },
+                    shape = RoundedCornerShape(21.dp),
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    elevation = FloatingActionButtonDefaults.elevation(10.dp, 6.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "New task", modifier = Modifier.size(27.dp))
+                }
+            }
+        },
+        bottomBar = {
+            TendNav(
+                selected = selectedTab,
+                reviewing = reviewing,
+                onSelect = { tab -> selectedTab = tab; reviewing = false }
+            )
+        }
+    ) { innerPadding ->
+        when {
+            selectedTab == 0 && reviewing -> ReviewScreen(
+                tasks = tasks, lists = lists, activeListId = activeListId,
+                onToggle = { viewModel.toggle(it) },
+                onReschedule = { task, date -> viewModel.reschedule(task, date) },
+                onOpen = { editingTask = it; showSheet = true },
+                onBack = { reviewing = false },
+                modifier = Modifier.padding(innerPadding)
+            )
+            selectedTab == 0 -> TodayScreen(
+                tasks = tasks, lists = lists, activeListId = activeListId,
+                onListSelect = { activeListId = it },
+                onToggle = { task ->
+                    viewModel.toggle(task)
+                    if (!task.done) {
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                "Task completed", "Undo", duration = SnackbarDuration.Short
+                            )
+                            if (result == SnackbarResult.ActionPerformed) viewModel.toggle(task)
+                        }
+                    }
+                },
+                onOpen = { editingTask = it; showSheet = true },
+                onGoReview = { reviewing = true },
+                modifier = Modifier.padding(innerPadding)
+            )
+            selectedTab == 1 -> ListsScreen(
+                tasks = tasks, lists = lists,
+                onPickList = { id -> activeListId = id; selectedTab = 0 },
+                modifier = Modifier.padding(innerPadding)
+            )
+            selectedTab == 2 -> HistoryScreen(
+                tasks = tasks, lists = lists,
+                onToggle = { viewModel.toggle(it) },
+                onOpen = { editingTask = it; showSheet = true },
+                modifier = Modifier.padding(innerPadding)
+            )
+            selectedTab == 3 -> SettingsScreen(
+                darkTheme = darkTheme,
+                onThemeToggle = onThemeToggle,
+                settings = settings,
+                onSettingsChange = { settings = it },
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+
+    if (showSheet) {
+        TaskEditSheet(
+            task = editingTask,
+            lists = lists,
+            defaultListId = if (activeListId == "all") "inbox" else activeListId,
+            onDismiss = { showSheet = false },
+            onSave = { saved ->
+                if (editingTask != null) viewModel.update(saved) else viewModel.add(saved)
+                showSheet = false
+            },
+            onDelete = { toDelete ->
+                viewModel.remove(toDelete.id)
+                showSheet = false
+                scope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        "Task deleted", "Undo", duration = SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.restore(toDelete)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun TendNav(selected: Int, reviewing: Boolean, onSelect: (Int) -> Unit) {
+    val itemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = MaterialTheme.colorScheme.primary,
+        selectedTextColor = MaterialTheme.colorScheme.primary,
+        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    )
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp
+    ) {
+        NavigationBarItem(
+            selected = selected == 0 && !reviewing,
+            onClick = { onSelect(0) },
+            icon = { Icon(ImageVector.vectorResource(R.drawable.note_icon), null, Modifier.size(23.dp)) },
+            label = { Text("Today", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+            colors = itemColors
+        )
+        NavigationBarItem(
+            selected = selected == 1,
+            onClick = { onSelect(1) },
+            icon = { Icon(ImageVector.vectorResource(R.drawable.note_edit), null, Modifier.size(23.dp)) },
+            label = { Text("Lists", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+            colors = itemColors
+        )
+        NavigationBarItem(
+            selected = selected == 2,
+            onClick = { onSelect(2) },
+            icon = { Icon(ImageVector.vectorResource(R.drawable.note_icon), null, Modifier.size(23.dp)) },
+            label = { Text("Done", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+            colors = itemColors
+        )
+        NavigationBarItem(
+            selected = selected == 3,
+            onClick = { onSelect(3) },
+            icon = { Icon(Icons.Default.Settings, null, Modifier.size(23.dp)) },
+            label = { Text("Settings", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+            colors = itemColors
+        )
+    }
+}

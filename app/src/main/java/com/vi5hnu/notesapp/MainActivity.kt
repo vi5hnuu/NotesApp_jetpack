@@ -3,7 +3,12 @@ package com.vi5hnu.notesapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.vi5hnu.notesapp.screen.NoteScreen
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.vi5hnu.notesapp.screen.AppScreen
 import com.vi5hnu.notesapp.ui.theme.NotesAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -12,8 +17,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NotesAppTheme {
-                NoteScreen()
+            val systemDark = isSystemInDarkTheme()
+            var darkTheme by remember { mutableStateOf(systemDark) }
+            NotesAppTheme(darkTheme = darkTheme) {
+                AppScreen(
+                    darkTheme = darkTheme,
+                    onThemeToggle = { darkTheme = it }
+                )
             }
         }
     }
