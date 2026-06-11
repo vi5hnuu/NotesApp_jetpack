@@ -2,6 +2,9 @@ package com.vi5hnu.notesapp.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -148,8 +151,11 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 Box(
-                    Modifier.size(15.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(5.dp))
-                )
+                    Modifier.size(15.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(5.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Check, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(10.dp))
+                }
                 Text("Tend", fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onSurface)
             }
             Spacer(Modifier.height(4.dp))

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,15 +41,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vi5hnu.notesapp.R
 import com.vi5hnu.notesapp.components.TaskRow
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
@@ -174,10 +172,7 @@ fun TodayScreen(
                                 Modifier.size(17.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    ImageVector.vectorResource(R.drawable.note_edit), null,
-                                    tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(11.dp)
-                                )
+                                Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(11.dp))
                             }
                             Text(
                                 "Tend", fontWeight = FontWeight.Bold,

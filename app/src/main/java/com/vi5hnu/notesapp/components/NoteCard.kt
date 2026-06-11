@@ -22,12 +22,12 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun NoteCard(
     note: Note,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    // Kept for backward compatibility — delete/edit now handled inside the edit sheet
     onDelete: (id: UUID) -> Unit = {},
     onEdit: (id: UUID) -> Unit = {}
 ) {

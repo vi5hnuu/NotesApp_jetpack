@@ -23,7 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vi5hnu.notesapp.model.Task
@@ -92,11 +95,17 @@ fun ListsScreen(
                     Column(Modifier.weight(1f)) {
                         Text(list.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.1).sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.height(2.dp))
+                        val primary = MaterialTheme.colorScheme.primary
                         Text(
-                            buildString {
+                            buildAnnotatedString {
                                 append("$active active")
                                 if (done > 0) append(" · $done done")
-                                if (overdue > 0) append(" · $overdue overdue")
+                                if (overdue > 0) {
+                                    append(" · ")
+                                    withStyle(SpanStyle(color = primary, fontWeight = FontWeight.Bold)) {
+                                        append("$overdue overdue")
+                                    }
+                                }
                             },
                             fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

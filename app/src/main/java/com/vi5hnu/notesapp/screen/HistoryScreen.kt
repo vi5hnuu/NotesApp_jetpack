@@ -1,6 +1,7 @@
 package com.vi5hnu.notesapp.screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -127,6 +128,7 @@ fun HistoryScreen(
                         count = dayTasks.size,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.background)
                             .padding(horizontal = 24.dp)
                             .padding(top = 8.dp, bottom = 4.dp)
                     )
