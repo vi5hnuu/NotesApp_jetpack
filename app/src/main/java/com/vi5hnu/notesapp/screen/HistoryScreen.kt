@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -39,14 +40,18 @@ fun HistoryScreen(
     onOpen: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val done = tasks.filter { it.done && it.completedAt != null }
-        .sortedByDescending { it.completedAt }
+    // Memoized — avoids repeated sort/group on every recomposition (e.g. scroll)
+    val done = remember(tasks) {
+        tasks.filter { it.done && it.completedAt != null }
+            .sortedByDescending { it.completedAt }
+    }
     val totalDone = done.size
-    val grouped = done.groupBy { it.completedAt!! }
-        .entries.sortedByDescending { it.key }
-
-    val topStreak = tasks.filter { it.recur != null && it.streak > 1 }
-        .maxByOrNull { it.streak }
+    val grouped = remember(done) {
+        done.groupBy { it.completedAt!! }.entries.sortedByDescending { it.key }
+    }
+    val topStreak = remember(tasks) {
+        tasks.filter { it.recur != null && it.streak > 1 }.maxByOrNull { it.streak }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),

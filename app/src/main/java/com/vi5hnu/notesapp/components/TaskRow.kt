@@ -54,7 +54,8 @@ fun TaskRow(
     showList: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val isOverdue = !task.done && task.due != null && diffDays(task.due, todayStr()) < 0
+    val today = remember { todayStr() }
+    val isOverdue = !task.done && task.due != null && diffDays(task.due, today) < 0
     val list = lists.find { it.id == task.listId }
     val subtasks = remember(task.subtasks) { parseSubtasks(task.subtasks) }
     val doneSubCount = subtasks.count { it.done }

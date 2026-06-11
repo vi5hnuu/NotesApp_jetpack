@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,8 @@ fun ListsScreen(
     onPickList: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val today = remember { todayStr() }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 100.dp)
@@ -68,7 +71,7 @@ fun ListsScreen(
             val active = all.count { !it.done }
             val done = all.count { it.done }
             val pct = if (all.isNotEmpty()) done.toFloat() / all.size else 0f
-            val overdue = all.count { !it.done && it.due != null && diffDays(it.due, todayStr()) < 0 }
+            val overdue = all.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }
 
             Surface(
                 onClick = { onPickList(list.id) },

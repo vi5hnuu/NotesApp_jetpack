@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,7 +53,7 @@ fun ReviewScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val today = todayStr()
+    val today = remember { todayStr() }
     val inList: (Task) -> Boolean = { activeListId == "all" || it.listId == activeListId }
     val overdue = tasks.filter { inList(it) && !it.done && it.due != null && diffDays(it.due, today) < 0 }
         .sortedBy { it.due }

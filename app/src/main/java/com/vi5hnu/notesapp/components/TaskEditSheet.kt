@@ -61,14 +61,15 @@ import androidx.compose.ui.unit.sp
 import com.vi5hnu.notesapp.model.Subtask
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
+import com.vi5hnu.notesapp.model.parseSubtasks
 import com.vi5hnu.notesapp.utils.addDays
+import com.vi5hnu.notesapp.utils.calendarToIso
 import com.vi5hnu.notesapp.utils.dateLabel
 import com.vi5hnu.notesapp.utils.nextWeekend
 import com.vi5hnu.notesapp.utils.timeLabel
 import com.vi5hnu.notesapp.utils.todayStr
 import kotlinx.coroutines.delay
 import java.util.Calendar
-import java.util.UUID
 
 private val QUICK_TIMES = listOf("07:00", "09:00", "12:00", "14:00", "18:00", "20:00")
 private val RECUR_OPTIONS = listOf(null, "daily", "weekdays", "weekly", "monthly")
@@ -575,7 +576,6 @@ private fun MiniCalendar(
             }
         }
         Spacer(Modifier.height(12.dp))
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
         val firstDow = Calendar.getInstance().apply { set(year, month, 1) }.get(Calendar.DAY_OF_WEEK) - 1
         val daysInMonth = Calendar.getInstance().apply { set(year, month, 1) }.getActualMaximum(Calendar.DAY_OF_MONTH)
         val cells = (0 until firstDow).map { null } + (1..daysInMonth).map { it }
@@ -594,7 +594,8 @@ private fun MiniCalendar(
                     val day = week.getOrNull(i)
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         if (day != null) {
-                            val dateStr = sdf.format(Calendar.getInstance().apply { set(year, month, day) }.time)
+                            // Uses ThreadLocal SDF from DateUtils — avoids creating new instances per cell
+                            val dateStr = calendarToIso(year, month, day)
                             val isSel = dateStr == selected
                             val isToday = dateStr == today
                             Surface(
@@ -638,12 +639,3 @@ private fun serializeSubtasks(subtasks: List<Subtask>): String {
     return arr.toString()
 }
 
-private fun parseSubtasks(json: String): List<Subtask> {
-    return try {
-        val arr = org.json.JSONArray(json)
-        (0 until arr.length()).map { i ->
-            val o = arr.getJSONObject(i)
-            Subtask(id = o.getString("id"), title = o.getString("title"), done = o.getBoolean("done"))
-        }
-    } catch (e: Exception) { emptyList() }
-}

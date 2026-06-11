@@ -112,3 +112,9 @@ fun monthLabel(year: Int, month: Int): String {
     val cal = Calendar.getInstance().apply { set(year, month, 1) }
     return MONTH_YEAR_SDF.get()!!.format(cal.time)
 }
+
+/** Format a calendar date (year, month, day) as an ISO string — uses the ThreadLocal SDF. */
+fun calendarToIso(year: Int, month: Int, day: Int): String {
+    val cal = Calendar.getInstance().apply { set(year, month, day) }
+    return isoSdf().format(cal.time)
+}

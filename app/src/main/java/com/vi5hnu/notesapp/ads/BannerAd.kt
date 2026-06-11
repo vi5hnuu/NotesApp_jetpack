@@ -1,16 +1,19 @@
 package com.vi5hnu.notesapp.ads
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 
 /**
- * Composable that embeds an AdMob banner ad (320x50) via [AndroidView].
- * The view is stable — AdMob handles refreshing internally.
+ * Composable that embeds an AdMob BANNER ad (320×50dp) via [AndroidView].
+ * Height is pre-reserved so the layout doesn't shift when the ad loads.
  */
 @Composable
 fun BannerAd(modifier: Modifier = Modifier) {
@@ -23,6 +26,7 @@ fun BannerAd(modifier: Modifier = Modifier) {
                 loadAd(AdRequest.Builder().build())
             }
         },
-        modifier = modifier
+        // 50.dp matches AdSize.BANNER height — pre-reserve space to prevent layout shift
+        modifier = modifier.fillMaxWidth().height(50.dp)
     )
 }
