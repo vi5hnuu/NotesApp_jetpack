@@ -96,29 +96,32 @@ fun TaskEditSheet(
     var time by remember(task) { mutableStateOf(task?.time) }
     var priority by remember(task) { mutableStateOf(task?.priority ?: "none") }
     var recur by remember(task) { mutableStateOf(task?.recur) }
-    var subtasks by remember(task) { mutableStateOf<List<Subtask>>(emptyList()) }
+    // Parse subtasks synchronously at initialisation — avoids LaunchedEffect flash/delay
+    var subtasks by remember(task) {
+        mutableStateOf(if (task != null) parseSubtasks(task.subtasks) else emptyList())
+    }
     var showCal by remember { mutableStateOf(false) }
-    var showMore by remember { mutableStateOf(false) }
+    var showMore by remember(task) {
+        mutableStateOf(task != null && (task.notes.isNotBlank() || task.subtasks != "[]"))
+    }
     var noDue by remember(task) { mutableStateOf(task?.due == null) }
 
     val titleFocus = remember { FocusRequester() }
 
+    // Only auto-focus for new tasks
     LaunchedEffect(Unit) {
         if (isNew) { delay(300); runCatching { titleFocus.requestFocus() } }
-        else {
-            val parsed = parseSubtasks(task!!.subtasks)
-            subtasks = parsed
-            showMore = task.notes.isNotBlank() || parsed.isNotEmpty()
-        }
     }
 
-    val today = todayStr()
-    val quickDates = listOf(
-        today to "Today",
-        addDays(today, 1) to "Tomorrow",
-        nextWeekend() to "Weekend",
-        addDays(today, 7) to "Next week"
-    )
+    val today = remember { todayStr() }
+    val quickDates = remember {
+        listOf(
+            todayStr() to "Today",
+            addDays(todayStr(), 1) to "Tomorrow",
+            nextWeekend() to "Weekend",
+            addDays(todayStr(), 7) to "Next week"
+        )
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

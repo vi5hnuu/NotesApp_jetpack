@@ -5,16 +5,22 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private val SDF = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+// ThreadLocal caches per-thread SDF instances — SimpleDateFormat is NOT thread-safe
+private val ISO_SDF = ThreadLocal.withInitial { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
+private val DISPLAY_SDF = ThreadLocal.withInitial { SimpleDateFormat("EEE, MMM d", Locale.ENGLISH) }
+private val SHORT_DATE_SDF = ThreadLocal.withInitial { SimpleDateFormat("MMM d", Locale.ENGLISH) }
+private val MONTH_YEAR_SDF = ThreadLocal.withInitial { SimpleDateFormat("MMMM yyyy", Locale.ENGLISH) }
 
-fun todayStr(): String = SDF.format(Date())
+private fun isoSdf() = ISO_SDF.get()!!
 
-fun parseDate(s: String): Date = SDF.parse(s) ?: Date()
+fun todayStr(): String = isoSdf().format(Date())
+
+fun parseDate(s: String): Date = isoSdf().parse(s) ?: Date()
 
 fun addDays(dateStr: String, n: Int): String {
     val cal = Calendar.getInstance().apply { time = parseDate(dateStr) }
     cal.add(Calendar.DAY_OF_YEAR, n)
-    return SDF.format(cal.time)
+    return isoSdf().format(cal.time)
 }
 
 /** Returns (a - b) in days: positive if a is after b */
@@ -25,9 +31,9 @@ fun diffDays(a: String, b: String): Int {
 }
 
 fun nextWeekend(): String {
-    var d = Calendar.getInstance()
+    val d = Calendar.getInstance()
     do { d.add(Calendar.DAY_OF_YEAR, 1) } while (d.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY)
-    return SDF.format(d.time)
+    return isoSdf().format(d.time)
 }
 
 fun nextOccurrence(from: String, recur: String): String? {
@@ -47,7 +53,7 @@ fun nextOccurrence(from: String, recur: String): String? {
         "monthly" -> {
             val cal = Calendar.getInstance().apply { time = parseDate(from) }
             cal.add(Calendar.MONTH, 1)
-            SDF.format(cal.time)
+            isoSdf().format(cal.time)
         }
         else -> null
     }
@@ -62,9 +68,7 @@ fun greeting(): String {
     }
 }
 
-fun longDate(): String {
-    return SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(Date())
-}
+fun longDate(): String = DISPLAY_SDF.get()!!.format(Date())
 
 fun dateLabel(dateStr: String): String {
     val today = todayStr()
@@ -72,7 +76,7 @@ fun dateLabel(dateStr: String): String {
         0    -> "Today"
         1    -> "Tomorrow"
         -1   -> "Yesterday"
-        else -> SimpleDateFormat("MMM d", Locale.ENGLISH).format(parseDate(dateStr))
+        else -> SHORT_DATE_SDF.get()!!.format(parseDate(dateStr))
     }
 }
 
@@ -81,7 +85,7 @@ fun dayHeadLabel(dateStr: String): String {
     return when (diffDays(dateStr, today)) {
         0    -> "Today"
         -1   -> "Yesterday"
-        else -> SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(parseDate(dateStr))
+        else -> DISPLAY_SDF.get()!!.format(parseDate(dateStr))
     }
 }
 
@@ -106,5 +110,5 @@ fun recurLabel(recur: String): String = when (recur) {
 
 fun monthLabel(year: Int, month: Int): String {
     val cal = Calendar.getInstance().apply { set(year, month, 1) }
-    return SimpleDateFormat("MMMM yyyy", Locale.ENGLISH).format(cal.time)
+    return MONTH_YEAR_SDF.get()!!.format(cal.time)
 }

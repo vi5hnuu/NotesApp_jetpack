@@ -2,6 +2,8 @@ package com.vi5hnu.notesapp.screen
 
 import android.content.Context
 import androidx.compose.foundation.layout.padding
+import com.vi5hnu.notesapp.utils.diffDays
+import com.vi5hnu.notesapp.utils.todayStr
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -78,8 +80,10 @@ fun AppScreen(
 
     val lists = DEFAULT_LISTS
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
-    val today = com.vi5hnu.notesapp.utils.todayStr()
-    val overdueCount = tasks.count { !it.done && it.due != null && com.vi5hnu.notesapp.utils.diffDays(it.due, today) < 0 }
+    val today = remember { todayStr() }
+    val overdueCount = remember(tasks) {
+        tasks.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,

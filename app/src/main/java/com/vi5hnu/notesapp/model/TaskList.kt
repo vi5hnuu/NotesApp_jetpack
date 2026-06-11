@@ -1,7 +1,9 @@
 package com.vi5hnu.notesapp.model
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
+@Immutable
 data class TaskList(
     val id: String,
     val name: String,

@@ -52,17 +52,17 @@ class TaskViewModel @Inject constructor(private val repo: TaskRepository) : View
         ).forEach { repo.add(it) }
     }
 
-    fun add(task: Task) = viewModelScope.launch { repo.add(task) }
+    fun add(task: Task) = viewModelScope.launch(Dispatchers.IO) { repo.add(task) }
 
-    fun update(task: Task) = viewModelScope.launch { repo.update(task) }
+    fun update(task: Task) = viewModelScope.launch(Dispatchers.IO) { repo.update(task) }
 
-    fun remove(id: UUID) = viewModelScope.launch { repo.remove(id) }
+    fun remove(id: UUID) = viewModelScope.launch(Dispatchers.IO) { repo.remove(id) }
 
-    fun restore(task: Task) = viewModelScope.launch { repo.add(task) }
+    fun restore(task: Task) = viewModelScope.launch(Dispatchers.IO) { repo.add(task) }
 
     /** Toggle done/undone; handles recur + streak */
     fun toggle(task: Task) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (task.done) {
                 repo.update(task.copy(done = false, completedAt = null))
                 return@launch
@@ -94,6 +94,6 @@ class TaskViewModel @Inject constructor(private val repo: TaskRepository) : View
     }
 
     fun reschedule(task: Task, newDue: String) {
-        viewModelScope.launch { repo.update(task.copy(due = newDue)) }
+        viewModelScope.launch(Dispatchers.IO) { repo.update(task.copy(due = newDue)) }
     }
 }

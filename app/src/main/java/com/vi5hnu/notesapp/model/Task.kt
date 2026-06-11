@@ -1,11 +1,14 @@
 package com.vi5hnu.notesapp.model
 
+import androidx.compose.runtime.Stable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 import java.util.UUID
 
+// @Stable (not @Immutable) because Date is mutable; tells Compose that equals() is reliable
+@Stable
 @Entity(tableName = "tasks")
 data class Task(
     @PrimaryKey

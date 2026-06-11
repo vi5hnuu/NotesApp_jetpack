@@ -68,33 +68,42 @@ fun TodayScreen(
     onGoReview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val today = todayStr()
-    val inList: (Task) -> Boolean = { activeListId == "all" || it.listId == activeListId }
+    // Computed once per composition session — date string won't change mid-session
+    val today = remember { todayStr() }
+    val greetingText = remember { greeting() }
+    val dateText = remember { longDate() }
 
     var searchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
 
-    val pool = tasks.filter {
-        inList(it) && (searchQuery.isBlank() ||
-            it.title.contains(searchQuery, ignoreCase = true) ||
-            it.notes.contains(searchQuery, ignoreCase = true))
+    // All derived lists memoized — avoids repeated O(n log n) work on every recomposition
+    val pool = remember(tasks, searchQuery, activeListId) {
+        tasks.filter { task ->
+            (activeListId == "all" || task.listId == activeListId) &&
+            (searchQuery.isBlank() ||
+                task.title.contains(searchQuery, ignoreCase = true) ||
+                task.notes.contains(searchQuery, ignoreCase = true))
+        }
     }
-
-    val overdue = pool.filter { !it.done && it.due != null && diffDays(it.due, today) < 0 }
-        .sortedBy { it.due }
-    val todayTasks = pool.filter { !it.done && it.due == today }
-        .sortedBy { it.time ?: "99:99" }
-    val noDate = pool.filter { !it.done && it.due == null }
-    val upcoming = pool.filter { !it.done && it.due != null && diffDays(it.due, today) > 0 }
-        .sortedWith(compareBy({ it.due }, { it.time ?: "99:99" }))
-    val completedToday = pool.filter { it.done && it.completedAt == today }
-
-    val upcomingGroups = upcoming.groupBy { it.due!! }.entries.sortedBy { it.key }
-
-    val dueTodayCount = todayTasks.size + overdue.size
-    val totalActive = tasks.count { !it.done }
+    val overdue = remember(pool) {
+        pool.filter { !it.done && it.due != null && diffDays(it.due, today) < 0 }.sortedBy { it.due }
+    }
+    val todayTasks = remember(pool) {
+        pool.filter { !it.done && it.due == today }.sortedBy { it.time ?: "99:99" }
+    }
+    val noDate = remember(pool) { pool.filter { !it.done && it.due == null } }
+    val upcoming = remember(pool) {
+        pool.filter { !it.done && it.due != null && diffDays(it.due, today) > 0 }
+            .sortedWith(compareBy({ it.due }, { it.time ?: "99:99" }))
+    }
+    val completedToday = remember(pool) { pool.filter { it.done && it.completedAt == today } }
+    val upcomingGroups = remember(upcoming) {
+        upcoming.groupBy { it.due!! }.entries.sortedBy { it.key }
+    }
+    val dueTodayCount = remember(todayTasks, overdue) { todayTasks.size + overdue.size }
+    val totalActive = remember(tasks) { tasks.count { !it.done } }
 
     var showDone by remember { mutableStateOf(false) }
 
@@ -194,13 +203,13 @@ fun TodayScreen(
                     }
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        greeting(), fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
+                        greetingText, fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.5).sp, lineHeight = 32.sp,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(Modifier.height(3.dp))
                     Text(
-                        "${longDate()} · $dueTodayCount due today",
+                        "$dateText · $dueTodayCount due today",
                         fontSize = 14.5.sp, fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

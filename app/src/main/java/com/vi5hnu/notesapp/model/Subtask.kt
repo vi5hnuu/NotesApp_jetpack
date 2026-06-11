@@ -1,8 +1,10 @@
 package com.vi5hnu.notesapp.model
 
+import androidx.compose.runtime.Immutable
 import org.json.JSONArray
 import java.util.UUID
 
+@Immutable
 data class Subtask(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
