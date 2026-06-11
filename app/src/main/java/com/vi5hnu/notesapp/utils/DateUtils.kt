@@ -96,6 +96,14 @@ fun timeLabel(timeStr: String): String {
     } catch (e: Exception) { timeStr }
 }
 
+fun recurLabel(recur: String): String = when (recur) {
+    "daily"    -> "Daily"
+    "weekdays" -> "Weekdays"
+    "weekly"   -> "Weekly"
+    "monthly"  -> "Monthly"
+    else       -> recur
+}
+
 fun monthLabel(year: Int, month: Int): String {
     val cal = Calendar.getInstance().apply { set(year, month, 1) }
     return SimpleDateFormat("MMMM yyyy", Locale.ENGLISH).format(cal.time)

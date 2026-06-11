@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -76,6 +78,8 @@ fun AppScreen(
 
     val lists = DEFAULT_LISTS
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
+    val today = com.vi5hnu.notesapp.utils.todayStr()
+    val overdueCount = tasks.count { !it.done && it.due != null && com.vi5hnu.notesapp.utils.diffDays(it.due, today) < 0 }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -97,6 +101,7 @@ fun AppScreen(
             TendNav(
                 selected = selectedTab,
                 reviewing = reviewing,
+                overdueCount = overdueCount,
                 onSelect = { tab -> selectedTab = tab; reviewing = false }
             )
         }
@@ -182,8 +187,9 @@ fun AppScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TendNav(selected: Int, reviewing: Boolean, onSelect: (Int) -> Unit) {
+private fun TendNav(selected: Int, reviewing: Boolean, overdueCount: Int, onSelect: (Int) -> Unit) {
     val itemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -198,7 +204,13 @@ private fun TendNav(selected: Int, reviewing: Boolean, onSelect: (Int) -> Unit) 
         NavigationBarItem(
             selected = selected == 0 && !reviewing,
             onClick = { onSelect(0) },
-            icon = { Icon(ImageVector.vectorResource(R.drawable.note_icon), null, Modifier.size(23.dp)) },
+            icon = {
+                BadgedBox(badge = {
+                    if (overdueCount > 0) Badge { Text("$overdueCount", fontSize = 9.sp) }
+                }) {
+                    Icon(ImageVector.vectorResource(R.drawable.note_icon), null, Modifier.size(23.dp))
+                }
+            },
             label = { Text("Today", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = itemColors
         )
