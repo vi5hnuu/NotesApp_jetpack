@@ -1,6 +1,9 @@
 package com.vi5hnu.notesapp.screen
 
+import android.app.Activity
 import android.content.Context
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.todayStr
@@ -43,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vi5hnu.notesapp.R
+import com.vi5hnu.notesapp.ads.BannerAd
+import com.vi5hnu.notesapp.ads.InterstitialAdManager
 import com.vi5hnu.notesapp.components.TaskEditSheet
 import com.vi5hnu.notesapp.model.DEFAULT_LISTS
 import com.vi5hnu.notesapp.model.Task
@@ -60,6 +65,7 @@ fun AppScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("tend_prefs", Context.MODE_PRIVATE) }
+    val interstitialAdManager = remember { InterstitialAdManager(context) }
 
     var selectedTab by remember { mutableStateOf(0) }
     var reviewing by remember { mutableStateOf(false) }
@@ -102,12 +108,15 @@ fun AppScreen(
             }
         },
         bottomBar = {
-            TendNav(
-                selected = selectedTab,
-                reviewing = reviewing,
-                overdueCount = overdueCount,
-                onSelect = { tab -> selectedTab = tab; reviewing = false }
-            )
+            Column {
+                BannerAd(modifier = Modifier.fillMaxWidth())
+                TendNav(
+                    selected = selectedTab,
+                    reviewing = reviewing,
+                    overdueCount = overdueCount,
+                    onSelect = { tab -> selectedTab = tab; reviewing = false }
+                )
+            }
         }
     ) { innerPadding ->
         when {
@@ -125,6 +134,8 @@ fun AppScreen(
                 onToggle = { task ->
                     viewModel.toggle(task)
                     if (!task.done) {
+                        // Trigger interstitial on every Nth task completion
+                        (context as? Activity)?.let { interstitialAdManager.onTaskCompleted(it) }
                         scope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 "Task completed", "Undo", duration = SnackbarDuration.Short

@@ -94,4 +94,10 @@ dependencies {
     //hilt
     implementation("com.google.dagger:hilt-android:2.48.1")
     ksp("com.google.dagger:hilt-android-compiler:2.48.1")
+
+    // Google AdMob
+    implementation("com.google.android.gms:play-services-ads:22.6.0")
+
+    // Lifecycle process observer for App Open ads
+    implementation("androidx.lifecycle:lifecycle-process:2.6.2")
 }
