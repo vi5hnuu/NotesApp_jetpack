@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -39,22 +42,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vi5hnu.notesapp.model.TaskList
 
 private val LIST_COLORS = listOf(
     Color(0xFFDF5F3A), Color(0xFF2B5FD1), Color(0xFF2F6F4E), Color(0xFFD4862E),
     Color(0xFFD4486B), Color(0xFF7A5AE0), Color(0xFF2AA5A0), Color(0xFF8A6D3B)
 )
 
-/** Bottom sheet to create a new custom list (name + colour). */
+/**
+ * Bottom sheet to create a new custom list, or edit/delete an existing one.
+ *
+ * @param existing the list being edited, or null to create a new one.
+ * @param onDelete shown only when editing; null hides the delete affordance.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateListSheet(
+fun ListEditSheet(
+    existing: TaskList?,
     onDismiss: () -> Unit,
-    onCreate: (name: String, color: Color) -> Unit
+    onSave: (name: String, color: Color) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var name by remember { mutableStateOf("") }
-    var color by remember { mutableStateOf(LIST_COLORS.first()) }
+    val isNew = existing == null
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    var color by remember { mutableStateOf(existing?.color ?: LIST_COLORS.first()) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -63,11 +75,20 @@ fun CreateListSheet(
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 8.dp)) {
-            Text(
-                "New list", fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
-                letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (isNew) "New list" else "Edit list",
+                    Modifier.weight(1f),
+                    fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
+                    letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onSurface
+                )
+                if (!isNew && onDelete != null) {
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Outlined.Delete, "Delete list", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
 
             Surface(
                 shape = RoundedCornerShape(14.dp),
@@ -81,9 +102,7 @@ fun CreateListSheet(
                     singleLine = true,
                     placeholder = { Text("List name", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f)) },
                     textStyle = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Words
-                    ),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -119,7 +138,7 @@ fun CreateListSheet(
 
             Spacer(Modifier.height(24.dp))
             Button(
-                onClick = { onCreate(name.trim(), color) },
+                onClick = { onSave(name.trim(), color) },
                 enabled = name.trim().isNotEmpty(),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(14.dp),
@@ -130,7 +149,7 @@ fun CreateListSheet(
                     disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(0.6f)
                 )
             ) {
-                Text("Create list", fontSize = 14.5.sp, fontWeight = FontWeight.Bold)
+                Text(if (isNew) "Create list" else "Save changes", fontSize = 14.5.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(8.dp))
             Spacer(Modifier.navigationBarsPadding())

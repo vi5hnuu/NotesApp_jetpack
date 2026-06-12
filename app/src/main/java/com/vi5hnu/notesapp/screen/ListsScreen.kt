@@ -45,7 +45,7 @@ fun ListsScreen(
     lists: List<TaskList>,
     onPickList: (String) -> Unit,
     onNewList: () -> Unit = {},
-    onDeleteList: (String) -> Unit = {},
+    onEditList: (TaskList) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val today = remember { todayStr() }
@@ -88,10 +88,10 @@ fun ListsScreen(
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(0.5f)),
                 modifier = Modifier
                     .padding(horizontal = 16.dp).padding(bottom = 11.dp).fillMaxWidth()
-                    // Custom lists can be long-pressed to delete; built-in lists cannot.
+                    // Custom lists can be long-pressed to edit/delete; built-in lists cannot.
                     .combinedClickable(
                         onClick = { onPickList(list.id) },
-                        onLongClick = if (deletable) ({ onDeleteList(list.id) }) else null
+                        onLongClick = if (deletable) ({ onEditList(list) }) else null
                     )
             ) {
                 Row(

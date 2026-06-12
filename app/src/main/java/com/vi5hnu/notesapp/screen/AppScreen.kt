@@ -48,9 +48,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vi5hnu.notesapp.ads.BannerAd
 import com.vi5hnu.notesapp.ads.InterstitialAdManager
-import com.vi5hnu.notesapp.components.CreateListSheet
+import com.vi5hnu.notesapp.components.ListEditSheet
 import com.vi5hnu.notesapp.components.TaskEditSheet
 import com.vi5hnu.notesapp.model.Task
+import com.vi5hnu.notesapp.model.TaskList
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,6 +92,7 @@ fun AppScreen(
 
     val lists by viewModel.lists.collectAsState()
     var showListSheet by remember { mutableStateOf(false) }
+    var editingList by remember { mutableStateOf<TaskList?>(null) }
     var listPendingDelete by remember { mutableStateOf<String?>(null) }
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
     val today = remember { todayStr() }
@@ -169,7 +171,7 @@ fun AppScreen(
                 tasks = tasks, lists = lists,
                 onPickList = { id -> activeListId = id; selectedTab = 0 },
                 onNewList = { showListSheet = true },
-                onDeleteList = { id -> listPendingDelete = id },
+                onEditList = { editingList = it },
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 2 -> HistoryScreen(
@@ -228,13 +230,17 @@ fun AppScreen(
         )
     }
 
-    if (showListSheet) {
-        CreateListSheet(
-            onDismiss = { showListSheet = false },
-            onCreate = { name, color ->
-                viewModel.addList(name, color)
-                showListSheet = false
-            }
+    if (showListSheet || editingList != null) {
+        val editing = editingList
+        ListEditSheet(
+            existing = editing,
+            onDismiss = { showListSheet = false; editingList = null },
+            onSave = { name, color ->
+                if (editing == null) viewModel.addList(name, color)
+                else viewModel.updateList(editing.id, name, color)
+                showListSheet = false; editingList = null
+            },
+            onDelete = editing?.let { e -> { editingList = null; listPendingDelete = e.id } }
         )
     }
 

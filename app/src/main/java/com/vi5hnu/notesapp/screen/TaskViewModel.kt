@@ -132,5 +132,9 @@ class TaskViewModel @Inject constructor(
         listRepo.add(UserList(name = name.trim(), color = color.toArgb().toLong()))
     }
 
+    fun updateList(id: String, name: String, color: Color) = viewModelScope.launch(Dispatchers.IO) {
+        listRepo.add(UserList(id = id, name = name.trim(), color = color.toArgb().toLong()))
+    }
+
     fun removeList(id: String) = viewModelScope.launch(Dispatchers.IO) { listRepo.remove(id) }
 }
