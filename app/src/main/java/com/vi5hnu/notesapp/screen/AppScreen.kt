@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.FormatListBulleted
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.ui.platform.LocalContext
@@ -39,13 +40,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.vi5hnu.notesapp.R
 import com.vi5hnu.notesapp.ads.BannerAd
 import com.vi5hnu.notesapp.ads.InterstitialAdManager
 import com.vi5hnu.notesapp.components.TaskEditSheet
@@ -231,7 +229,7 @@ private fun TendNav(selected: Int, reviewing: Boolean, overdueCount: Int, onSele
                 BadgedBox(badge = {
                     if (overdueCount > 0) Badge { Text("$overdueCount", fontSize = 9.sp) }
                 }) {
-                    Icon(ImageVector.vectorResource(R.drawable.note_icon), null, Modifier.size(23.dp))
+                    Icon(Icons.Outlined.Today, null, Modifier.size(24.dp))
                 }
             },
             label = { Text("Today", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
@@ -240,21 +238,21 @@ private fun TendNav(selected: Int, reviewing: Boolean, overdueCount: Int, onSele
         NavigationBarItem(
             selected = selected == 1,
             onClick = { onSelect(1) },
-            icon = { Icon(Icons.Default.List, null, Modifier.size(23.dp)) },
+            icon = { Icon(Icons.Outlined.FormatListBulleted, null, Modifier.size(24.dp)) },
             label = { Text("Lists", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = itemColors
         )
         NavigationBarItem(
             selected = selected == 2,
             onClick = { onSelect(2) },
-            icon = { Icon(Icons.Default.Check, null, Modifier.size(23.dp)) },
+            icon = { Icon(Icons.Outlined.CheckCircle, null, Modifier.size(24.dp)) },
             label = { Text("Done", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = itemColors
         )
         NavigationBarItem(
             selected = selected == 3,
             onClick = { onSelect(3) },
-            icon = { Icon(Icons.Default.Settings, null, Modifier.size(23.dp)) },
+            icon = { Icon(Icons.Outlined.Settings, null, Modifier.size(24.dp)) },
             label = { Text("Settings", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
             colors = itemColors
         )
