@@ -133,6 +133,9 @@ dependencies {
     // Google AdMob
     implementation("com.google.android.gms:play-services-ads:22.6.0")
 
+    // User Messaging Platform — GDPR/EEA consent before serving ads
+    implementation("com.google.android.ump:user-messaging-platform:2.1.0")
+
     // Lifecycle process observer for App Open ads
     implementation("androidx.lifecycle:lifecycle-process:2.6.2")
 }

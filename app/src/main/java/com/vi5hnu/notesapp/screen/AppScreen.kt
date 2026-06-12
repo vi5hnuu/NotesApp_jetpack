@@ -57,7 +57,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppScreen(
     darkTheme: Boolean = false,
-    onThemeToggle: (Boolean) -> Unit = {}
+    onThemeToggle: (Boolean) -> Unit = {},
+    adsEnabled: Boolean = false
 ) {
     val viewModel = viewModel<TaskViewModel>()
     val tasks by viewModel.tasks.collectAsState()
@@ -65,7 +66,10 @@ fun AppScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("tend_prefs", Context.MODE_PRIVATE) }
-    val interstitialAdManager = remember { InterstitialAdManager(context) }
+    // Created only once ads are permitted (after consent); null until then.
+    val interstitialAdManager = remember(adsEnabled) {
+        if (adsEnabled) InterstitialAdManager(context) else null
+    }
 
     var selectedTab by remember { mutableStateOf(0) }
     var reviewing by remember { mutableStateOf(false) }
@@ -109,7 +113,7 @@ fun AppScreen(
         },
         bottomBar = {
             Column {
-                BannerAd()
+                if (adsEnabled) BannerAd()
                 TendNav(
                     selected = selectedTab,
                     reviewing = reviewing,
@@ -134,8 +138,10 @@ fun AppScreen(
                 onToggle = { task ->
                     viewModel.toggle(task)
                     if (!task.done) {
-                        // Trigger interstitial on every Nth task completion
-                        (context as? Activity)?.let { interstitialAdManager.onTaskCompleted(it) }
+                        // Trigger interstitial on every Nth task completion (only when ads are enabled)
+                        (context as? Activity)?.let { act ->
+                            interstitialAdManager?.onTaskCompleted(act)
+                        }
                         scope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 "Task completed", "Undo", duration = SnackbarDuration.Short
