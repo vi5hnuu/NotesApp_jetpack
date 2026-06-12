@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -204,12 +205,14 @@ fun AppScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TendNav(selected: Int, reviewing: Boolean, overdueCount: Int, onSelect: (Int) -> Unit) {
+    // Flat nav to match design: active state is color-only (terracotta), no indicator pill.
+    // A tinted pill in the same hue as the icon made the selected icon blend in / disappear.
     val itemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = MaterialTheme.colorScheme.primary,
         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
         unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        indicatorColor = Color.Transparent
     )
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
