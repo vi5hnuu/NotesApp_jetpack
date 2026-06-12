@@ -17,10 +17,10 @@
         android:theme="@style/Theme.NotesApp"
         tools:targetApi="31">
 
-        <!-- AdMob App ID -->
+        <!-- AdMob App ID — test ID in debug, real ID in release (set per build type) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4715945578201106~6871363399"/>
+            android:value="${admobAppId}"/>
 
         <activity
             android:name=".MainActivity"

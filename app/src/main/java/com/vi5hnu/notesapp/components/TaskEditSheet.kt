@@ -115,7 +115,6 @@ fun TaskEditSheet(
         if (isNew) { delay(300); runCatching { titleFocus.requestFocus() } }
     }
 
-    val today = remember { todayStr() }
     val quickDates = remember {
         listOf(
             todayStr() to "Today",
@@ -588,7 +587,7 @@ private fun MiniCalendar(
             val cal = Calendar.getInstance().apply { set(year, month, 1) }
             val firstDow = cal.get(Calendar.DAY_OF_WEEK) - 1
             val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-            ((0 until firstDow).map { null as Int? } + (1..daysInMonth).map { it }).chunked(7)
+            ((0 until firstDow).map<Int, Int?> { null } + (1..daysInMonth).toList()).chunked(7)
         }
         Row(Modifier.fillMaxWidth()) {
             listOf("S","M","T","W","T","F","S").forEach { d ->
