@@ -1,9 +1,14 @@
 package com.vi5hnu.notesapp.screen
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,9 +34,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+// Hosted legal documents and support contact (see legal.laxmi.solutions repo).
+private const val PRIVACY_URL = "https://legal.laxmi.solutions/notes/privacy-policy"
+private const val TERMS_URL = "https://legal.laxmi.solutions/notes/terms-of-service"
+private const val SUPPORT_EMAIL = "laxmi.solutions.2025@gmail.com"
 
 @Immutable
 data class AppSettings(
@@ -50,6 +61,7 @@ fun SettingsScreen(
     onSettingsChange: (AppSettings) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -146,6 +158,16 @@ fun SettingsScreen(
             )
         }
 
+        Spacer(Modifier.height(6.dp))
+        SettingGroupLabel("Legal & Support")
+        SettingGroup {
+            LinkRow("🔒", "Privacy Policy") { openUrl(context, PRIVACY_URL) }
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            LinkRow("📄", "Terms of Service") { openUrl(context, TERMS_URL) }
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            LinkRow("✉️", "Contact support", sub = SUPPORT_EMAIL) { sendSupportEmail(context) }
+        }
+
         Spacer(Modifier.height(40.dp))
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
@@ -158,12 +180,51 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Default.Check, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(10.dp))
                 }
-                Text("Tend", fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onSurface)
+                Text("Notes", fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onSurface)
             }
             Spacer(Modifier.height(4.dp))
-            Text("Version 1.0.2 · On-device", fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Version 1.0.3 · On-device", fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+/** A tappable settings row that navigates out (e.g. opens a URL or email). */
+@Composable
+private fun LinkRow(emoji: String, title: String, sub: String? = null, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 15.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(11.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(emoji, fontSize = 17.sp) }
+        }
+        Column(Modifier.weight(1f)) {
+            Text(title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            if (sub != null) Text(sub, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Icon(
+            Icons.Default.KeyboardArrowRight, null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+private fun openUrl(context: android.content.Context, url: String) {
+    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+}
+
+private fun sendSupportEmail(context: android.content.Context) {
+    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$SUPPORT_EMAIL"))
+    try {
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        // No email client — fall back to copying nothing; silently ignore to avoid a crash.
     }
 }
 

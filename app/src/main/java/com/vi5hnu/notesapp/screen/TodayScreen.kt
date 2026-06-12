@@ -186,7 +186,7 @@ fun TodayScreen(
                                 Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(11.dp))
                             }
                             Text(
-                                "Tend", fontWeight = FontWeight.Bold,
+                                "Notes", fontWeight = FontWeight.Bold,
                                 letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onBackground,
                                 style = MaterialTheme.typography.titleMedium
                             )
