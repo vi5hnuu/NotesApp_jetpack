@@ -99,6 +99,7 @@ fun SettingsScreen(
         SettingGroup {
             SettingRow("⚠️", "Roll over missed tasks",
                 "Overdue tasks move to “Needs attention” instead of vanishing",
+                onClick = { onSettingsChange(settings.copy(rollover = !settings.rollover)) },
                 control = {
                     Switch(
                         checked = settings.rollover,
@@ -109,6 +110,7 @@ fun SettingsScreen(
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingRow("🔔", "Time reminders", "Notify at a task's set time",
+                onClick = { onSettingsChange(settings.copy(reminders = !settings.reminders)) },
                 control = {
                     Switch(
                         checked = settings.reminders,
@@ -119,6 +121,7 @@ fun SettingsScreen(
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingRow("🔥", "Habit streaks", "Track streaks for repeating tasks",
+                onClick = { onSettingsChange(settings.copy(streaks = !settings.streaks)) },
                 control = {
                     Switch(
                         checked = settings.streaks,
@@ -129,6 +132,7 @@ fun SettingsScreen(
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingRow("☀️", "Daily planning nudge", "8:00 AM — Plan your day",
+                onClick = { onSettingsChange(settings.copy(nudge = !settings.nudge)) },
                 control = {
                     Switch(
                         checked = settings.nudge,
@@ -148,6 +152,7 @@ fun SettingsScreen(
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingRow("🗂️", "Auto-archive completed", "After 30 days",
+                onClick = { onSettingsChange(settings.copy(archive = !settings.archive)) },
                 control = {
                     Switch(
                         checked = settings.archive,
@@ -256,10 +261,14 @@ private fun SettingRow(
     emoji: String,
     title: String,
     sub: String?,
+    onClick: (() -> Unit)? = null,
     control: @Composable () -> Unit
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 15.dp),
+        Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 16.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {

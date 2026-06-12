@@ -178,7 +178,10 @@ fun AppScreen(
                 onThemeToggle = onThemeToggle,
                 settings = settings,
                 onSettingsChange = { s ->
+                    val remindersChanged = s.reminders != settings.reminders
+                    val nudgeChanged = s.nudge != settings.nudge
                     settings = s
+                    // Persist first so the scheduler reads the new reminders preference.
                     prefs.edit()
                         .putBoolean("s_rollover", s.rollover)
                         .putBoolean("s_reminders", s.reminders)
@@ -186,6 +189,8 @@ fun AppScreen(
                         .putBoolean("s_nudge", s.nudge)
                         .putBoolean("s_archive", s.archive)
                         .apply()
+                    if (remindersChanged) viewModel.syncReminders()
+                    if (nudgeChanged) viewModel.setDailyNudge(s.nudge)
                 },
                 modifier = Modifier.padding(innerPadding)
             )

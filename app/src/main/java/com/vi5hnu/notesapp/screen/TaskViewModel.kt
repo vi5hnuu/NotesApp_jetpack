@@ -3,6 +3,7 @@ package com.vi5hnu.notesapp.screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vi5hnu.notesapp.model.Task
+import com.vi5hnu.notesapp.notifications.ReminderScheduler
 import com.vi5hnu.notesapp.repository.TaskRepository
 import com.vi5hnu.notesapp.utils.addDays
 import com.vi5hnu.notesapp.utils.nextOccurrence
@@ -17,7 +18,10 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class TaskViewModel @Inject constructor(private val repo: TaskRepository) : ViewModel() {
+class TaskViewModel @Inject constructor(
+    private val repo: TaskRepository,
+    private val reminders: ReminderScheduler
+) : ViewModel() {
 
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks = _tasks.asStateFlow()
@@ -25,6 +29,8 @@ class TaskViewModel @Inject constructor(private val repo: TaskRepository) : View
     private var seeded = false
 
     init {
+        // Apply the daily planning nudge from the saved preference at startup.
+        reminders.syncDailyNudgeFromPrefs()
         viewModelScope.launch(Dispatchers.IO) {
             repo.getTasks()
                 .distinctUntilChanged()
@@ -34,10 +40,18 @@ class TaskViewModel @Inject constructor(private val repo: TaskRepository) : View
                         seedInitialData()
                     } else {
                         _tasks.value = list
+                        // Keep reminder alarms in sync with the latest tasks.
+                        reminders.sync(list)
                     }
                 }
         }
     }
+
+    /** Re-evaluate all reminder alarms — call when the reminders setting is toggled. */
+    fun syncReminders() = reminders.sync(_tasks.value)
+
+    /** Enable/disable the daily planning nudge — call when the nudge setting is toggled. */
+    fun setDailyNudge(enabled: Boolean) = reminders.setDailyNudge(enabled)
 
     private suspend fun seedInitialData() {
         val today = todayStr()
