@@ -93,6 +93,26 @@ fun AppScreen(
         tasks.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }
     }
 
+    // Stable callbacks — remembered so task-list rows stay skippable when `tasks` changes.
+    val openTask: (Task) -> Unit = remember { { task -> editingTask = task; showSheet = true } }
+    val toggleSimple: (Task) -> Unit = remember { { task -> viewModel.toggle(task) } }
+    val rescheduleTask: (Task, String) -> Unit = remember { { task, date -> viewModel.reschedule(task, date) } }
+    val toggleWithUndo: (Task) -> Unit = remember(adsEnabled) {
+        { task ->
+            viewModel.toggle(task)
+            if (!task.done) {
+                // Trigger interstitial on every Nth task completion (only when ads are enabled)
+                (context as? Activity)?.let { act -> interstitialAdManager?.onTaskCompleted(act) }
+                scope.launch {
+                    val result = snackbarHostState.showSnackbar(
+                        "Task completed", "Undo", duration = SnackbarDuration.Short
+                    )
+                    if (result == SnackbarResult.ActionPerformed) viewModel.toggle(task)
+                }
+            }
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -124,32 +144,19 @@ fun AppScreen(
         when {
             selectedTab == 0 && reviewing -> ReviewScreen(
                 tasks = tasks, lists = lists, activeListId = activeListId,
-                onToggle = { viewModel.toggle(it) },
-                onReschedule = { task, date -> viewModel.reschedule(task, date) },
-                onOpen = { editingTask = it; showSheet = true },
+                onToggle = toggleSimple,
+                onReschedule = rescheduleTask,
+                onOpen = openTask,
                 onBack = { reviewing = false },
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 0 -> TodayScreen(
                 tasks = tasks, lists = lists, activeListId = activeListId,
                 onListSelect = { activeListId = it },
-                onToggle = { task ->
-                    viewModel.toggle(task)
-                    if (!task.done) {
-                        // Trigger interstitial on every Nth task completion (only when ads are enabled)
-                        (context as? Activity)?.let { act ->
-                            interstitialAdManager?.onTaskCompleted(act)
-                        }
-                        scope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                "Task completed", "Undo", duration = SnackbarDuration.Short
-                            )
-                            if (result == SnackbarResult.ActionPerformed) viewModel.toggle(task)
-                        }
-                    }
-                },
-                onOpen = { editingTask = it; showSheet = true },
+                onToggle = toggleWithUndo,
+                onOpen = openTask,
                 onGoReview = { reviewing = true },
+                showStreak = settings.streaks,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 1 -> ListsScreen(
@@ -159,8 +166,8 @@ fun AppScreen(
             )
             selectedTab == 2 -> HistoryScreen(
                 tasks = tasks, lists = lists,
-                onToggle = { viewModel.toggle(it) },
-                onOpen = { editingTask = it; showSheet = true },
+                onToggle = toggleSimple,
+                onOpen = openTask,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 3 -> SettingsScreen(

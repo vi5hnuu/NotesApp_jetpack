@@ -30,6 +30,7 @@ import com.vi5hnu.notesapp.components.TaskRow
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
 import com.vi5hnu.notesapp.utils.dayHeadLabel
+import com.vi5hnu.notesapp.utils.todayStr
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -40,6 +41,8 @@ fun HistoryScreen(
     onOpen: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val today = remember { todayStr() }
+    val listMap = remember(lists) { lists.associateBy { it.id } }
     // Memoized — avoids repeated sort/group on every recomposition (e.g. scroll)
     val done = remember(tasks) {
         tasks.filter { it.done && it.completedAt != null }
@@ -140,9 +143,8 @@ fun HistoryScreen(
                 }
                 items(dayTasks, key = { it.id }) { task ->
                     TaskRow(
-                        task = task, lists = lists,
-                        onToggle = { onToggle(task) },
-                        onClick = { onOpen(task) },
+                        task = task, list = listMap[task.listId], today = today,
+                        onToggle = onToggle, onClick = onOpen,
                         showList = true,
                         modifier = Modifier
                             .animateItemPlacement()

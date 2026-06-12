@@ -66,12 +66,15 @@ fun TodayScreen(
     onToggle: (Task) -> Unit,
     onOpen: (Task) -> Unit,
     onGoReview: () -> Unit,
+    showStreak: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     // Computed once per composition session — date string won't change mid-session
     val today = remember { todayStr() }
     val greetingText = remember { greeting() }
     val dateText = remember { longDate() }
+    // Stable id -> list lookup so each row gets an @Immutable TaskList instead of scanning the list
+    val listMap = remember(lists) { lists.associateBy { it.id } }
 
     var searchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -265,10 +268,10 @@ fun TodayScreen(
             }
             items(todayAndNoDate, key = { it.id }) { task ->
                 TaskRow(
-                    task = task, lists = lists,
-                    onToggle = { onToggle(task) },
-                    onClick = { onOpen(task) },
+                    task = task, list = listMap[task.listId], today = today,
+                    onToggle = onToggle, onClick = onOpen,
                     showList = activeListId == "all",
+                    showStreak = showStreak,
                     modifier = Modifier
                         .animateItemPlacement()
                         .padding(horizontal = 16.dp).padding(bottom = 10.dp)
@@ -290,10 +293,10 @@ fun TodayScreen(
                 }
                 items(dayTasks, key = { it.id }) { task ->
                     TaskRow(
-                        task = task, lists = lists,
-                        onToggle = { onToggle(task) },
-                        onClick = { onOpen(task) },
+                        task = task, list = listMap[task.listId], today = today,
+                        onToggle = onToggle, onClick = onOpen,
                         showList = activeListId == "all",
+                        showStreak = showStreak,
                         modifier = Modifier
                             .animateItemPlacement()
                             .padding(horizontal = 16.dp).padding(bottom = 10.dp)
@@ -330,10 +333,10 @@ fun TodayScreen(
             if (showDone) {
                 items(completedToday, key = { it.id }) { task ->
                     TaskRow(
-                        task = task, lists = lists,
-                        onToggle = { onToggle(task) },
-                        onClick = { onOpen(task) },
+                        task = task, list = listMap[task.listId], today = today,
+                        onToggle = onToggle, onClick = onOpen,
                         showList = activeListId == "all",
+                        showStreak = showStreak,
                         modifier = Modifier
                             .animateItemPlacement()
                             .padding(horizontal = 16.dp).padding(bottom = 10.dp)
