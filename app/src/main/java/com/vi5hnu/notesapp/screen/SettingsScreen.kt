@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vi5hnu.notesapp.utils.showTimePicker
+import com.vi5hnu.notesapp.utils.timeLabel
 
 // Hosted legal documents and support contact (see legal.laxmi.solutions repo).
 private const val PRIVACY_URL = "https://legal.laxmi.solutions/notes/privacy-policy"
@@ -50,6 +52,7 @@ data class AppSettings(
     val reminders: Boolean = true,
     val streaks: Boolean = true,
     val nudge: Boolean = true,
+    val nudgeTime: String = "08:00",
     val archive: Boolean = false
 )
 
@@ -131,14 +134,38 @@ fun SettingsScreen(
                 }
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingRow("☀️", "Daily planning nudge", "8:00 AM — Plan your day",
+            SettingRow("☀️", "Daily planning nudge",
+                "${timeLabel(settings.nudgeTime)} — Plan your day",
                 onClick = { onSettingsChange(settings.copy(nudge = !settings.nudge)) },
                 control = {
-                    Switch(
-                        checked = settings.nudge,
-                        onCheckedChange = { onSettingsChange(settings.copy(nudge = it)) },
-                        colors = switchColors()
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (settings.nudge) {
+                            Surface(
+                                onClick = {
+                                    showTimePicker(context, settings.nudgeTime) { picked ->
+                                        onSettingsChange(settings.copy(nudgeTime = picked))
+                                    }
+                                },
+                                shape = RoundedCornerShape(9.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Text(
+                                    timeLabel(settings.nudgeTime),
+                                    Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
+                                    fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.nudge,
+                            onCheckedChange = { onSettingsChange(settings.copy(nudge = it)) },
+                            colors = switchColors()
+                        )
+                    }
                 }
             )
         }

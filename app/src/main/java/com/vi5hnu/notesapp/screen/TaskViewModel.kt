@@ -3,6 +3,7 @@ package com.vi5hnu.notesapp.screen
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
+import com.vi5hnu.notesapp.BuildConfig
 import androidx.lifecycle.viewModelScope
 import com.vi5hnu.notesapp.model.DEFAULT_LISTS
 import com.vi5hnu.notesapp.model.Task
@@ -50,7 +51,8 @@ class TaskViewModel @Inject constructor(
             repo.getTasks()
                 .distinctUntilChanged()
                 .collect { list ->
-                    if (list.isEmpty() && !seeded) {
+                    // Seed sample tasks only in debug builds; real users start with a clean app.
+                    if (list.isEmpty() && !seeded && BuildConfig.DEBUG) {
                         seeded = true
                         seedInitialData()
                     } else {

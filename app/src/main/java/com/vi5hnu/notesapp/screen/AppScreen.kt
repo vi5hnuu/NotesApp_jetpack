@@ -83,6 +83,7 @@ fun AppScreen(
                 reminders = prefs.getBoolean("s_reminders", true),
                 streaks = prefs.getBoolean("s_streaks", true),
                 nudge = prefs.getBoolean("s_nudge", true),
+                nudgeTime = prefs.getString("s_nudge_time", "08:00") ?: "08:00",
                 archive = prefs.getBoolean("s_archive", false)
             )
         )
@@ -185,14 +186,15 @@ fun AppScreen(
                 settings = settings,
                 onSettingsChange = { s ->
                     val remindersChanged = s.reminders != settings.reminders
-                    val nudgeChanged = s.nudge != settings.nudge
+                    val nudgeChanged = s.nudge != settings.nudge || s.nudgeTime != settings.nudgeTime
                     settings = s
-                    // Persist first so the scheduler reads the new reminders preference.
+                    // Persist first so the scheduler reads the new preferences.
                     prefs.edit()
                         .putBoolean("s_rollover", s.rollover)
                         .putBoolean("s_reminders", s.reminders)
                         .putBoolean("s_streaks", s.streaks)
                         .putBoolean("s_nudge", s.nudge)
+                        .putString("s_nudge_time", s.nudgeTime)
                         .putBoolean("s_archive", s.archive)
                         .apply()
                     if (remindersChanged) viewModel.syncReminders()

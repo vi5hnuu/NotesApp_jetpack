@@ -128,18 +128,26 @@ class ReminderScheduler @Inject constructor(
             context, NUDGE_REQUEST_CODE, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val next8am = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 8)
-            set(Calendar.MINUTE, 0)
+        val (hour, minute) = nudgeTime()
+        val nextTrigger = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1)
         }.timeInMillis
         runCatching {
             alarmManager.setInexactRepeating(
-                AlarmManager.RTC_WAKEUP, next8am, AlarmManager.INTERVAL_DAY, pi
+                AlarmManager.RTC_WAKEUP, nextTrigger, AlarmManager.INTERVAL_DAY, pi
             )
         }
+    }
+
+    /** The configured nudge time ("HH:mm" pref), defaulting to 08:00. */
+    private fun nudgeTime(): Pair<Int, Int> {
+        val parts = (prefs.getString("s_nudge_time", "08:00") ?: "08:00")
+            .split(":").mapNotNull { it.toIntOrNull() }
+        return (parts.getOrNull(0) ?: 8) to (parts.getOrNull(1) ?: 0)
     }
 
     private companion object {

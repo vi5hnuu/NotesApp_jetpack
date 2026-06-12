@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -67,6 +68,7 @@ import com.vi5hnu.notesapp.utils.calendarToIso
 import com.vi5hnu.notesapp.utils.dateLabel
 import com.vi5hnu.notesapp.utils.parseDate
 import com.vi5hnu.notesapp.utils.nextWeekend
+import com.vi5hnu.notesapp.utils.showTimePicker
 import com.vi5hnu.notesapp.utils.timeLabel
 import com.vi5hnu.notesapp.utils.todayStr
 import kotlinx.coroutines.delay
@@ -109,6 +111,7 @@ fun TaskEditSheet(
     var noDue by remember(task) { mutableStateOf(task?.due == null) }
 
     val titleFocus = remember { FocusRequester() }
+    val context = LocalContext.current
 
     // Only auto-focus for new tasks
     LaunchedEffect(Unit) {
@@ -271,7 +274,7 @@ fun TaskEditSheet(
                     }
                 }
 
-                // Reminder time (only when due is set)
+                // Reminder time (only when due is set) — quick presets + any custom time
                 if (!noDue) {
                     Spacer(Modifier.height(4.dp))
                     FieldLabel("Reminder time")
@@ -282,6 +285,14 @@ fun TaskEditSheet(
                                 selected = time == t,
                                 icon = "🔔"
                             ) { time = if (time == t) null else t }
+                        }
+                        val isCustomTime = time != null && time !in QUICK_TIMES
+                        OptChip(
+                            label = if (isCustomTime) timeLabel(time!!) else "Custom",
+                            selected = isCustomTime,
+                            icon = "⏰"
+                        ) {
+                            showTimePicker(context, time) { picked -> time = picked }
                         }
                     }
                 }
