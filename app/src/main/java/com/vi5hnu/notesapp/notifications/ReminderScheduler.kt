@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * Schedules and cancels local reminder alarms via [AlarmManager].
  *
  * - Per-task reminders fire at the task's due date + time (inexact, Doze-friendly).
- * - A daily "plan your day" nudge fires at 08:00.
+ * - A daily "plan your day" nudge fires at the user-configured time (default 08:00).
  *
  * [sync] reconciles the alarm set with the current task list and is safe to call on every task
  * change (alarms are replaced idempotently). All alarm operations are wrapped so a platform
@@ -111,7 +111,7 @@ class ReminderScheduler @Inject constructor(
 
     // ---- Daily planning nudge ----
 
-    /** Reads the persisted nudge preference and (re)applies the 08:00 daily alarm. */
+    /** Reads the persisted nudge preference and (re)applies the daily alarm at the configured time. */
     fun syncDailyNudgeFromPrefs() = setDailyNudge(prefs.getBoolean("s_nudge", true))
 
     fun setDailyNudge(enabled: Boolean) {
