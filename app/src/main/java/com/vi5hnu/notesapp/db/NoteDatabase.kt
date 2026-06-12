@@ -4,10 +4,12 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.vi5hnu.notesapp.model.Task
+import com.vi5hnu.notesapp.model.UserList
 
-// Version bumped to 3 after dropping the legacy Note entity — destructive migration recreates the schema.
-@Database(entities = [Task::class], version = 3, exportSchema = false)
+// v3: dropped the legacy Note entity. v4: added user-created lists. Destructive migration recreates.
+@Database(entities = [Task::class, UserList::class], version = 4, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class NoteDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDatabaseDao
+    abstract fun userListDao(): UserListDao
 }

@@ -1,6 +1,8 @@
 package com.vi5hnu.notesapp.screen
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,19 +32,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vi5hnu.notesapp.model.DEFAULT_LISTS
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
 import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.todayStr
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ListsScreen(
     tasks: List<Task>,
     lists: List<TaskList>,
     onPickList: (String) -> Unit,
+    onNewList: () -> Unit = {},
+    onDeleteList: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val today = remember { todayStr() }
+    val defaultIds = remember { DEFAULT_LISTS.mapTo(HashSet()) { it.id } }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -66,20 +73,26 @@ fun ListsScreen(
             }
         }
 
-        items(lists) { list ->
+        items(lists, key = { it.id }) { list ->
             val all = tasks.filter { it.listId == list.id }
             val active = all.count { !it.done }
             val done = all.count { it.done }
             val pct = if (all.isNotEmpty()) done.toFloat() / all.size else 0f
             val overdue = all.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }
+            val deletable = list.id !in defaultIds
 
             Surface(
-                onClick = { onPickList(list.id) },
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(0.5f)),
-                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 11.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(horizontal = 16.dp).padding(bottom = 11.dp).fillMaxWidth()
+                    // Custom lists can be long-pressed to delete; built-in lists cannot.
+                    .combinedClickable(
+                        onClick = { onPickList(list.id) },
+                        onLongClick = if (deletable) ({ onDeleteList(list.id) }) else null
+                    )
             ) {
                 Row(
                     Modifier.padding(16.dp),
@@ -120,9 +133,10 @@ fun ListsScreen(
             }
         }
 
-        // "New list" placeholder card
+        // "New list" card — opens the create-list sheet
         item {
             Surface(
+                onClick = onNewList,
                 shape = RoundedCornerShape(20.dp),
                 color = Color.Transparent,
                 border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),

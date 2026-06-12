@@ -14,11 +14,13 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Today
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,8 +48,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vi5hnu.notesapp.ads.BannerAd
 import com.vi5hnu.notesapp.ads.InterstitialAdManager
+import com.vi5hnu.notesapp.components.CreateListSheet
 import com.vi5hnu.notesapp.components.TaskEditSheet
-import com.vi5hnu.notesapp.model.DEFAULT_LISTS
 import com.vi5hnu.notesapp.model.Task
 import kotlinx.coroutines.launch
 
@@ -86,7 +88,9 @@ fun AppScreen(
         )
     }
 
-    val lists = DEFAULT_LISTS
+    val lists by viewModel.lists.collectAsState()
+    var showListSheet by remember { mutableStateOf(false) }
+    var listPendingDelete by remember { mutableStateOf<String?>(null) }
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
     val today = remember { todayStr() }
     val overdueCount = remember(tasks) {
@@ -163,6 +167,8 @@ fun AppScreen(
             selectedTab == 1 -> ListsScreen(
                 tasks = tasks, lists = lists,
                 onPickList = { id -> activeListId = id; selectedTab = 0 },
+                onNewList = { showListSheet = true },
+                onDeleteList = { id -> listPendingDelete = id },
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 2 -> HistoryScreen(
@@ -216,6 +222,33 @@ fun AppScreen(
                     )
                     if (result == SnackbarResult.ActionPerformed) viewModel.restore(toDelete)
                 }
+            }
+        )
+    }
+
+    if (showListSheet) {
+        CreateListSheet(
+            onDismiss = { showListSheet = false },
+            onCreate = { name, color ->
+                viewModel.addList(name, color)
+                showListSheet = false
+            }
+        )
+    }
+
+    listPendingDelete?.let { id ->
+        val listName = lists.firstOrNull { it.id == id }?.name ?: "this list"
+        AlertDialog(
+            onDismissRequest = { listPendingDelete = null },
+            title = { Text("Delete list?") },
+            text = { Text("“$listName” will be removed. Tasks in it are kept but lose their list tag.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.removeList(id); listPendingDelete = null }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { listPendingDelete = null }) { Text("Cancel") }
             }
         )
     }

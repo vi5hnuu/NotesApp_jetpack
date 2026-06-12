@@ -1,9 +1,15 @@
 package com.vi5hnu.notesapp.screen
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vi5hnu.notesapp.model.DEFAULT_LISTS
 import com.vi5hnu.notesapp.model.Task
+import com.vi5hnu.notesapp.model.TaskList
+import com.vi5hnu.notesapp.model.UserList
 import com.vi5hnu.notesapp.notifications.ReminderScheduler
+import com.vi5hnu.notesapp.repository.ListRepository
 import com.vi5hnu.notesapp.repository.TaskRepository
 import com.vi5hnu.notesapp.utils.addDays
 import com.vi5hnu.notesapp.utils.nextOccurrence
@@ -11,8 +17,11 @@ import com.vi5hnu.notesapp.utils.todayStr
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -20,11 +29,17 @@ import javax.inject.Inject
 @HiltViewModel
 class TaskViewModel @Inject constructor(
     private val repo: TaskRepository,
+    private val listRepo: ListRepository,
     private val reminders: ReminderScheduler
 ) : ViewModel() {
 
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks = _tasks.asStateFlow()
+
+    /** Built-in lists merged with the user's custom lists. */
+    val lists = listRepo.getLists()
+        .map { custom -> DEFAULT_LISTS + custom.map { TaskList(it.id, it.name, Color(it.color.toInt())) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DEFAULT_LISTS)
 
     private var seeded = false
 
@@ -110,4 +125,10 @@ class TaskViewModel @Inject constructor(
     fun reschedule(task: Task, newDue: String) {
         viewModelScope.launch(Dispatchers.IO) { repo.update(task.copy(due = newDue)) }
     }
+
+    fun addList(name: String, color: Color) = viewModelScope.launch(Dispatchers.IO) {
+        listRepo.add(UserList(name = name.trim(), color = color.toArgb().toLong()))
+    }
+
+    fun removeList(id: String) = viewModelScope.launch(Dispatchers.IO) { listRepo.remove(id) }
 }

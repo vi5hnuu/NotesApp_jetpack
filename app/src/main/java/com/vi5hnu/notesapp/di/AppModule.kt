@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.vi5hnu.notesapp.db.NoteDatabase
 import com.vi5hnu.notesapp.db.TaskDatabaseDao
+import com.vi5hnu.notesapp.db.UserListDao
+import com.vi5hnu.notesapp.repository.ListRepository
 import com.vi5hnu.notesapp.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
@@ -31,4 +33,12 @@ object AppModule {
     @Singleton
     @Provides
     fun provideTaskRepository(dao: TaskDatabaseDao): TaskRepository = TaskRepository(dao)
+
+    @Singleton
+    @Provides
+    fun provideUserListDao(db: NoteDatabase): UserListDao = db.userListDao()
+
+    @Singleton
+    @Provides
+    fun provideListRepository(dao: UserListDao): ListRepository = ListRepository(dao)
 }
