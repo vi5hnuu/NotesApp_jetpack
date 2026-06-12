@@ -1,13 +1,16 @@
 package com.vi5hnu.notesapp.notifications
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.vi5hnu.notesapp.MainActivity
 import com.vi5hnu.notesapp.R
 
@@ -46,6 +49,12 @@ object NotificationHelper {
     }
 
     private fun post(context: Context, id: Int, channel: String, title: String, text: String) {
+        // Explicit POST_NOTIFICATIONS check (Android 13+) — no-op if not granted.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
+
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
 

@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <!-- Local task reminders + daily planning nudge -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Re-register alarms after the device reboots -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name="com.vi5hnu.notesapp.NoteApplication"
@@ -40,6 +42,15 @@
         <receiver
             android:name=".notifications.ReminderReceiver"
             android:exported="false" />
+
+        <!-- Re-arms alarms after device reboot -->
+        <receiver
+            android:name=".notifications.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
