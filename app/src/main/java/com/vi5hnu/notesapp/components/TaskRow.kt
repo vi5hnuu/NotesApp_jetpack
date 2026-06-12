@@ -31,6 +31,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -125,7 +127,9 @@ fun TaskRow(
                 shape = CircleShape,
                 color = checkBg,
                 border = BorderStroke(2.2.dp, checkBorder),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp).semantics {
+                    contentDescription = if (task.done) "Mark not done" else "Mark done"
+                }
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.size(24.dp)) {
                     if (task.done) {
