@@ -67,6 +67,7 @@ fun TodayScreen(
     onOpen: (Task) -> Unit,
     onGoReview: () -> Unit,
     showStreak: Boolean = true,
+    rollover: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     // Computed once per composition session — date string won't change mid-session
@@ -107,8 +108,13 @@ fun TodayScreen(
     }
     val dueTodayCount = remember(todayTasks, overdue) { todayTasks.size + overdue.size }
     val totalActive = remember(tasks) { tasks.count { !it.done } }
-    // Memoize concatenation to avoid a new list allocation on every recomposition
+    // Memoize concatenation to avoid a new list allocation on every recomposition.
+    // When rollover is OFF, overdue tasks fold into the Today list (no nagging card) so they
+    // still surface instead of vanishing; when ON they live in the "Needs attention" card.
     val todayAndNoDate = remember(todayTasks, noDate) { todayTasks + noDate }
+    val todaySection = remember(rollover, overdue, todayAndNoDate) {
+        if (rollover) todayAndNoDate else overdue + todayAndNoDate
+    }
 
     var showDone by remember { mutableStateOf(false) }
 
@@ -245,8 +251,8 @@ fun TodayScreen(
             }
         }
 
-        // ---- Needs attention ----
-        if (overdue.isNotEmpty()) {
+        // ---- Needs attention (only when rollover is enabled) ----
+        if (rollover && overdue.isNotEmpty()) {
             item {
                 AttentionCard(
                     count = overdue.size,
@@ -262,11 +268,11 @@ fun TodayScreen(
         }
 
         // ---- Today section ----
-        if (todayAndNoDate.isNotEmpty()) {
+        if (todaySection.isNotEmpty()) {
             item {
-                SectionHead(label = "Today", count = todayAndNoDate.size)
+                SectionHead(label = "Today", count = todaySection.size)
             }
-            items(todayAndNoDate, key = { it.id }) { task ->
+            items(todaySection, key = { it.id }) { task ->
                 TaskRow(
                     task = task, list = listMap[task.listId], today = today,
                     onToggle = onToggle, onClick = onOpen,

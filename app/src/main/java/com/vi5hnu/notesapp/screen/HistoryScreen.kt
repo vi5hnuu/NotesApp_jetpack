@@ -30,6 +30,7 @@ import com.vi5hnu.notesapp.components.TaskRow
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
 import com.vi5hnu.notesapp.utils.dayHeadLabel
+import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.todayStr
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -39,21 +40,28 @@ fun HistoryScreen(
     lists: List<TaskList>,
     onToggle: (Task) -> Unit,
     onOpen: (Task) -> Unit,
+    showStreak: Boolean = true,
+    autoArchive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val today = remember { todayStr() }
     val listMap = remember(lists) { lists.associateBy { it.id } }
-    // Memoized — avoids repeated sort/group on every recomposition (e.g. scroll)
-    val done = remember(tasks) {
-        tasks.filter { it.done && it.completedAt != null }
+    // Memoized — avoids repeated sort/group on every recomposition (e.g. scroll).
+    // When auto-archive is on, completions older than 30 days are hidden from history.
+    val done = remember(tasks, autoArchive, today) {
+        tasks.asSequence()
+            .filter { it.done && it.completedAt != null }
+            .filter { !autoArchive || diffDays(it.completedAt!!, today) >= -30 }
             .sortedByDescending { it.completedAt }
+            .toList()
     }
     val totalDone = done.size
     val grouped = remember(done) {
         done.groupBy { it.completedAt!! }.entries.sortedByDescending { it.key }
     }
-    val topStreak = remember(tasks) {
-        tasks.filter { it.recur != null && it.streak > 1 }.maxByOrNull { it.streak }
+    val topStreak = remember(tasks, showStreak) {
+        if (!showStreak) null
+        else tasks.filter { it.recur != null && it.streak > 1 }.maxByOrNull { it.streak }
     }
 
     LazyColumn(
@@ -146,6 +154,7 @@ fun HistoryScreen(
                         task = task, list = listMap[task.listId], today = today,
                         onToggle = onToggle, onClick = onOpen,
                         showList = true,
+                        showStreak = showStreak,
                         modifier = Modifier
                             .animateItemPlacement()
                             .padding(horizontal = 16.dp).padding(bottom = 10.dp)

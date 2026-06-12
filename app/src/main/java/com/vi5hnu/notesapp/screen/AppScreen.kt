@@ -135,7 +135,7 @@ fun AppScreen(
                 TendNav(
                     selected = selectedTab,
                     reviewing = reviewing,
-                    overdueCount = overdueCount,
+                    overdueCount = if (settings.rollover) overdueCount else 0,
                     onSelect = { tab -> selectedTab = tab; reviewing = false }
                 )
             }
@@ -157,6 +157,7 @@ fun AppScreen(
                 onOpen = openTask,
                 onGoReview = { reviewing = true },
                 showStreak = settings.streaks,
+                rollover = settings.rollover,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 1 -> ListsScreen(
@@ -168,6 +169,8 @@ fun AppScreen(
                 tasks = tasks, lists = lists,
                 onToggle = toggleSimple,
                 onOpen = openTask,
+                showStreak = settings.streaks,
+                autoArchive = settings.archive,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 3 -> SettingsScreen(
