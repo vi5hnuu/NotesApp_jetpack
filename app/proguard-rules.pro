@@ -16,6 +16,15 @@
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep line numbers for readable crash reports in production, hide original file names.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# --- Room entities / models (accessed via generated + reflective code) ---
+-keep class com.vi5hnu.notesapp.model.** { *; }
+
+# --- Defensive keep for the Application class ---
+# Hilt, Room and Play Services Ads ship their own consumer ProGuard rules.
+-keep class com.vi5hnu.notesapp.NoteApplication { *; }
+
+# org.json is part of the Android framework — no rules needed.

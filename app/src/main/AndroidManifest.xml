@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Local task reminders + daily planning nudge -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Re-register alarms after the device reboots -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:name="com.vi5hnu.notesapp.NoteApplication"
         android:allowBackup="true"
@@ -13,6 +20,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NotesApp"
         tools:targetApi="31">
+
+        <!-- AdMob App ID — test ID in debug, real ID in release (set per build type) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -24,6 +37,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Receives AlarmManager broadcasts for task reminders and the daily nudge -->
+        <receiver
+            android:name=".notifications.ReminderReceiver"
+            android:exported="false" />
+
+        <!-- Re-arms alarms after device reboot -->
+        <receiver
+            android:name=".notifications.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
