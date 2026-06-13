@@ -68,6 +68,7 @@ fun TodayScreen(
     onGoReview: () -> Unit,
     showStreak: Boolean = true,
     rollover: Boolean = true,
+    is24h: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     // Computed once per composition session — date string won't change mid-session
@@ -278,6 +279,7 @@ fun TodayScreen(
                     onToggle = onToggle, onClick = onOpen,
                     showList = activeListId == "all",
                     showStreak = showStreak,
+                    is24h = is24h,
                     modifier = Modifier
                         .animateItemPlacement()
                         .padding(horizontal = 16.dp).padding(bottom = 10.dp)
@@ -303,6 +305,7 @@ fun TodayScreen(
                         onToggle = onToggle, onClick = onOpen,
                         showList = activeListId == "all",
                         showStreak = showStreak,
+                        is24h = is24h,
                         modifier = Modifier
                             .animateItemPlacement()
                             .padding(horizontal = 16.dp).padding(bottom = 10.dp)
@@ -343,6 +346,7 @@ fun TodayScreen(
                         onToggle = onToggle, onClick = onOpen,
                         showList = activeListId == "all",
                         showStreak = showStreak,
+                        is24h = is24h,
                         modifier = Modifier
                             .animateItemPlacement()
                             .padding(horizontal = 16.dp).padding(bottom = 10.dp)

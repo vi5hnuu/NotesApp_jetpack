@@ -112,6 +112,7 @@ fun TaskEditSheet(
 
     val titleFocus = remember { FocusRequester() }
     val context = LocalContext.current
+    val is24h = remember { android.text.format.DateFormat.is24HourFormat(context) }
 
     // Only auto-focus for new tasks
     LaunchedEffect(Unit) {
@@ -281,14 +282,14 @@ fun TaskEditSheet(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         QUICK_TIMES.forEach { t ->
                             OptChip(
-                                label = timeLabel(t),
+                                label = timeLabel(t, is24h),
                                 selected = time == t,
                                 icon = "🔔"
                             ) { time = if (time == t) null else t }
                         }
                         val isCustomTime = time != null && time !in QUICK_TIMES
                         OptChip(
-                            label = if (isCustomTime) timeLabel(time!!) else "Custom",
+                            label = if (isCustomTime) timeLabel(time!!, is24h) else "Custom",
                             selected = isCustomTime,
                             icon = "⏰"
                         ) {

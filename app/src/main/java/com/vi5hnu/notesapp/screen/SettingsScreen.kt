@@ -35,6 +35,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -68,6 +69,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val is24h = remember { android.text.format.DateFormat.is24HourFormat(context) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -138,7 +140,7 @@ fun SettingsScreen(
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingRow("☀️", "Daily planning nudge",
-                "${timeLabel(settings.nudgeTime)} — Plan your day",
+                "${timeLabel(settings.nudgeTime, is24h)} — Plan your day",
                 onClick = { onSettingsChange(settings.copy(nudge = !settings.nudge)) },
                 control = {
                     Row(
@@ -156,7 +158,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.surfaceVariant
                             ) {
                                 Text(
-                                    timeLabel(settings.nudgeTime),
+                                    timeLabel(settings.nudgeTime, is24h),
                                     Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
                                     fontSize = 13.sp, fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface

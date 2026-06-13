@@ -114,6 +114,7 @@ fun AppScreen(
         }
     }
     val today = remember { todayStr() }
+    val is24h = remember { android.text.format.DateFormat.is24HourFormat(context) }
     val overdueCount = remember(tasks) {
         tasks.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }
     }
@@ -183,6 +184,7 @@ fun AppScreen(
                 onGoReview = { reviewing = true },
                 showStreak = settings.streaks,
                 rollover = settings.rollover,
+                is24h = is24h,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 1 -> ListsScreen(
@@ -198,6 +200,7 @@ fun AppScreen(
                 onOpen = openTask,
                 showStreak = settings.streaks,
                 autoArchive = settings.archive,
+                is24h = is24h,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 3 -> SettingsScreen(
