@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationManagerCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -66,10 +68,18 @@ fun SettingsScreen(
     onThemeToggle: (Boolean) -> Unit,
     settings: AppSettings,
     onSettingsChange: (AppSettings) -> Unit,
+    onExport: (Uri) -> Unit = {},
+    onImport: (Uri) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val is24h = remember { android.text.format.DateFormat.is24HourFormat(context) }
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri -> uri?.let(onExport) }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let(onImport) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -200,6 +210,14 @@ fun SettingsScreen(
                     )
                 }
             )
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            LinkRow("⬆️", "Export backup", sub = "Save all tasks & lists to a file") {
+                exportLauncher.launch("notes-backup.json")
+            }
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+            LinkRow("⬇️", "Import backup", sub = "Restore from a backup file") {
+                importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+            }
         }
 
         Spacer(Modifier.height(6.dp))

@@ -99,6 +99,11 @@ fun AppScreen(
     var listPendingDelete by remember { mutableStateOf<String?>(null) }
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
 
+    // Show one-shot messages (e.g. backup results) from the ViewModel.
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+    }
+
     // Open the task from a tapped reminder notification, once the task list is available.
     LaunchedEffect(openTaskId, tasks) {
         val id = openTaskId ?: return@LaunchedEffect
@@ -219,6 +224,8 @@ fun AppScreen(
                 darkTheme = darkTheme,
                 onThemeToggle = onThemeToggle,
                 settings = settings,
+                onExport = { viewModel.exportTo(it) },
+                onImport = { viewModel.importFrom(it) },
                 onSettingsChange = { s ->
                     val remindersChanged = s.reminders != settings.reminders
                     val nudgeChanged = s.nudge != settings.nudge || s.nudgeTime != settings.nudgeTime
