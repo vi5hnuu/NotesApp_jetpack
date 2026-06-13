@@ -41,8 +41,7 @@ class MainActivity : ComponentActivity() {
         val prefs = getSharedPreferences("tend_prefs", MODE_PRIVATE)
 
         requestNotificationPermissionIfNeeded()
-        openTaskId.value = intent?.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
-        openAdd.value = intent?.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false) ?: false
+        consumeLaunchIntent(intent)
 
         // Gather consent, then initialize the ads SDK and enable ad surfaces.
         ConsentManager(this).gatherConsent(this) {
@@ -70,12 +69,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Tapped a reminder while the app was already running.
+    // Tapped a reminder / widget while the app was already running.
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)?.let { openTaskId.value = it }
-        if (intent.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false)) openAdd.value = true
+        consumeLaunchIntent(intent)
+    }
+
+    /**
+     * Reads the one-shot launch extras (open-task / open-add) and **removes them** so they don't
+     * fire again if the activity is recreated (rotation, return from background) and re-reads its
+     * intent. The cleaned intent is stored back via [setIntent].
+     */
+    private fun consumeLaunchIntent(intent: Intent?) {
+        intent ?: return
+        intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)?.let {
+            openTaskId.value = it
+            intent.removeExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
+        }
+        if (intent.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false)) {
+            openAdd.value = true
+            intent.removeExtra(TodayWidgetProvider.EXTRA_OPEN_ADD)
+        }
+        setIntent(intent)
     }
 
     /** Ask for notification permission on Android 13+ so task reminders can be shown. */
