@@ -22,6 +22,7 @@ data class Task(
     val done: Boolean = false,
     @ColumnInfo(name = "completed_at") val completedAt: String? = null,
     val recur: String? = null,                  // "daily"|"weekdays"|"weekly"|"monthly"
+    val until: String? = null,                  // YYYY-MM-DD — recurrence stops after this date
     val streak: Int = 0,
     val subtasks: String = "[]",                // JSON array of Subtask
     @ColumnInfo(name = "created_at") val createdAt: Date = Date()

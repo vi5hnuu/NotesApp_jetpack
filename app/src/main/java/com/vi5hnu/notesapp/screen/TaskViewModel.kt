@@ -100,12 +100,15 @@ class TaskViewModel @Inject constructor(
             }
             val today = todayStr()
             if (task.recur != null) {
-                val next = nextOccurrence(task.due ?: today, task.recur)
+                val rawNext = nextOccurrence(task.due ?: today, task.recur)
+                // Stop recurring once the next occurrence would pass the user's end date.
+                val next = if (rawNext != null && task.until != null && rawNext > task.until) null else rawNext
                 val snap = task.copy(
                     id = UUID.randomUUID(),
                     done = true,
                     completedAt = today,
                     recur = null,
+                    until = null,
                     streak = 0,
                     subtasks = "[]"
                 )

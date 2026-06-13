@@ -100,6 +100,7 @@ fun TaskEditSheet(
     var time by remember(task) { mutableStateOf(task?.time) }
     var priority by remember(task) { mutableStateOf(task?.priority ?: "none") }
     var recur by remember(task) { mutableStateOf(task?.recur) }
+    var until by remember(task) { mutableStateOf(task?.until) }
     // Parse subtasks synchronously at initialisation — avoids LaunchedEffect flash/delay
     var subtasks by remember(task) {
         mutableStateOf(if (task != null) parseSubtasks(task.subtasks) else emptyList())
@@ -307,7 +308,21 @@ fun TaskEditSheet(
                         OptChip(
                             label = RECUR_LABELS[i],
                             selected = recur == r
-                        ) { recur = r }
+                        ) { recur = r; if (r == null) until = null }
+                    }
+                }
+
+                // Recurrence end date (only when repeating)
+                if (recur != null) {
+                    Spacer(Modifier.height(4.dp))
+                    FieldLabel("Ends")
+                    val endBase = if (noDue) todayStr() else due
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OptChip(label = "No end", selected = until == null) { until = null }
+                        listOf(30 to "1 month", 90 to "3 months", 365 to "1 year").forEach { (days, label) ->
+                            val date = addDays(endBase, days)
+                            OptChip(label = label, selected = until == date, icon = "📅") { until = date }
+                        }
                     }
                 }
 
@@ -468,6 +483,7 @@ fun TaskEditSheet(
                             time = time,
                             priority = priority,
                             recur = recur,
+                            until = if (recur != null) until else null,
                             subtasks = serializeSubtasks(subtasks.filter { it.title.isNotBlank() })
                         ) else task!!.copy(
                             title = title.trim(),
@@ -477,6 +493,7 @@ fun TaskEditSheet(
                             time = time,
                             priority = priority,
                             recur = recur,
+                            until = if (recur != null) until else null,
                             subtasks = serializeSubtasks(subtasks.filter { it.title.isNotBlank() })
                         )
                         onSave(saved)
