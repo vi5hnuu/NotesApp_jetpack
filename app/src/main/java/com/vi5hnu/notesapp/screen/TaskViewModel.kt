@@ -14,6 +14,7 @@ import com.vi5hnu.notesapp.notifications.ReminderScheduler
 import com.vi5hnu.notesapp.repository.BackupManager
 import com.vi5hnu.notesapp.repository.ListRepository
 import com.vi5hnu.notesapp.repository.TaskRepository
+import com.vi5hnu.notesapp.widget.WidgetUpdater
 import com.vi5hnu.notesapp.utils.addDays
 import com.vi5hnu.notesapp.utils.nextOccurrence
 import com.vi5hnu.notesapp.utils.todayStr
@@ -37,7 +38,8 @@ class TaskViewModel @Inject constructor(
     private val repo: TaskRepository,
     private val listRepo: ListRepository,
     private val reminders: ReminderScheduler,
-    private val backup: BackupManager
+    private val backup: BackupManager,
+    private val widgetUpdater: WidgetUpdater
 ) : ViewModel() {
 
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
@@ -67,8 +69,9 @@ class TaskViewModel @Inject constructor(
                         seedInitialData()
                     } else {
                         _tasks.value = list
-                        // Keep reminder alarms in sync with the latest tasks.
+                        // Keep reminder alarms and the home-screen widget in sync.
                         reminders.sync(list)
+                        widgetUpdater.update()
                     }
                 }
         }
