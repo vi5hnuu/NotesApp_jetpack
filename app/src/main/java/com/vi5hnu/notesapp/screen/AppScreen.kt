@@ -34,6 +34,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,9 @@ import kotlinx.coroutines.launch
 fun AppScreen(
     darkTheme: Boolean = false,
     onThemeToggle: (Boolean) -> Unit = {},
-    adsEnabled: Boolean = false
+    adsEnabled: Boolean = false,
+    openTaskId: String? = null,
+    onTaskOpened: () -> Unit = {}
 ) {
     val viewModel = viewModel<TaskViewModel>()
     val tasks by viewModel.tasks.collectAsState()
@@ -95,6 +98,21 @@ fun AppScreen(
     var editingList by remember { mutableStateOf<TaskList?>(null) }
     var listPendingDelete by remember { mutableStateOf<String?>(null) }
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
+
+    // Open the task from a tapped reminder notification, once the task list is available.
+    LaunchedEffect(openTaskId, tasks) {
+        val id = openTaskId ?: return@LaunchedEffect
+        val match = tasks.firstOrNull { it.id.toString() == id }
+        if (match != null) {
+            reviewing = false
+            selectedTab = 0
+            editingTask = match
+            showSheet = true
+            onTaskOpened()
+        } else if (tasks.isNotEmpty()) {
+            onTaskOpened() // task no longer exists — drop the request
+        }
+    }
     val today = remember { todayStr() }
     val overdueCount = remember(tasks) {
         tasks.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }

@@ -25,6 +25,9 @@ object NotificationHelper {
     const val CHANNEL_NUDGE = "daily_plan"
     const val NUDGE_NOTIFICATION_ID = 1001
 
+    /** Intent extra carrying the task id to open when a reminder notification is tapped. */
+    const val EXTRA_OPEN_TASK_ID = "open_task_id"
+
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -40,15 +43,17 @@ object NotificationHelper {
         )
     }
 
-    fun showTaskReminder(context: Context, notificationId: Int, title: String, sub: String?) {
-        post(context, notificationId, CHANNEL_REMINDERS, title, sub ?: "Tap to open")
+    fun showTaskReminder(context: Context, notificationId: Int, title: String, sub: String?, taskId: String?) {
+        post(context, notificationId, CHANNEL_REMINDERS, title, sub ?: "Tap to open", taskId)
     }
 
     fun showDailyNudge(context: Context) {
-        post(context, NUDGE_NOTIFICATION_ID, CHANNEL_NUDGE, "Plan your day", "What matters most today?")
+        post(context, NUDGE_NOTIFICATION_ID, CHANNEL_NUDGE, "Plan your day", "What matters most today?", null)
     }
 
-    private fun post(context: Context, id: Int, channel: String, title: String, text: String) {
+    private fun post(
+        context: Context, id: Int, channel: String, title: String, text: String, openTaskId: String?
+    ) {
         // Explicit POST_NOTIFICATIONS check (Android 13+) — no-op if not granted.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -58,9 +63,12 @@ object NotificationHelper {
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
 
+        val launchIntent = Intent(context, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .apply { if (openTaskId != null) putExtra(EXTRA_OPEN_TASK_ID, openTaskId) }
+        // Unique request code per notification so each carries its own task-id extra.
         val contentIntent = PendingIntent.getActivity(
-            context, 0,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            context, id, launchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 

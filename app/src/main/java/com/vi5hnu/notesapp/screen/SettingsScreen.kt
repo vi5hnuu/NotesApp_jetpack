@@ -1,8 +1,11 @@
 package com.vi5hnu.notesapp.screen
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
+import androidx.core.app.NotificationManagerCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -170,6 +173,13 @@ fun SettingsScreen(
             )
         }
 
+        // Honest hint: reminders/nudge are on but the OS won't show notifications.
+        val notificationsBlocked = (settings.reminders || settings.nudge) &&
+            !NotificationManagerCompat.from(context).areNotificationsEnabled()
+        if (notificationsBlocked) {
+            NotificationsOffHint(onEnable = { openNotificationSettings(context) })
+        }
+
         Spacer(Modifier.height(6.dp))
         SettingGroupLabel("Data")
         SettingGroup {
@@ -281,6 +291,50 @@ private fun SettingGroup(content: @Composable () -> Unit) {
     ) {
         Column { content() }
     }
+}
+
+@Composable
+private fun NotificationsOffHint(onEnable: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(0.2f)),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("🔕", fontSize = 18.sp)
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Notifications are off", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "Reminders won't appear until you turn notifications on.",
+                    fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 16.sp
+                )
+            }
+            Surface(
+                onClick = onEnable,
+                shape = RoundedCornerShape(100.dp),
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                Text(
+                    "Enable", Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+    }
+}
+
+private fun openNotificationSettings(context: Context) {
+    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+    runCatching { context.startActivity(intent) }
 }
 
 @Composable
