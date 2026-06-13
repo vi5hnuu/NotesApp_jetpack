@@ -47,6 +47,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vi5hnu.notesapp.components.SwipeableTaskRow
 import com.vi5hnu.notesapp.components.TaskRow
 import com.vi5hnu.notesapp.model.Task
 import com.vi5hnu.notesapp.model.TaskList
@@ -65,6 +66,7 @@ fun TodayScreen(
     onListSelect: (String) -> Unit,
     onToggle: (Task) -> Unit,
     onOpen: (Task) -> Unit,
+    onDelete: (Task) -> Unit,
     onGoReview: () -> Unit,
     showStreak: Boolean = true,
     rollover: Boolean = true,
@@ -274,9 +276,9 @@ fun TodayScreen(
                 SectionHead(label = "Today", count = todaySection.size)
             }
             items(todaySection, key = { it.id }) { task ->
-                TaskRow(
+                SwipeableTaskRow(
                     task = task, list = listMap[task.listId], today = today,
-                    onToggle = onToggle, onClick = onOpen,
+                    onToggle = onToggle, onClick = onOpen, onDelete = onDelete,
                     showList = activeListId == "all",
                     showStreak = showStreak,
                     is24h = is24h,
@@ -300,9 +302,9 @@ fun TodayScreen(
                     )
                 }
                 items(dayTasks, key = { it.id }) { task ->
-                    TaskRow(
+                    SwipeableTaskRow(
                         task = task, list = listMap[task.listId], today = today,
-                        onToggle = onToggle, onClick = onOpen,
+                        onToggle = onToggle, onClick = onOpen, onDelete = onDelete,
                         showList = activeListId == "all",
                         showStreak = showStreak,
                         is24h = is24h,
@@ -341,9 +343,9 @@ fun TodayScreen(
             }
             if (showDone) {
                 items(completedToday, key = { it.id }) { task ->
-                    TaskRow(
+                    SwipeableTaskRow(
                         task = task, list = listMap[task.listId], today = today,
-                        onToggle = onToggle, onClick = onOpen,
+                        onToggle = onToggle, onClick = onOpen, onDelete = onDelete,
                         showList = activeListId == "all",
                         showStreak = showStreak,
                         is24h = is24h,

@@ -122,6 +122,17 @@ fun AppScreen(
     // Stable callbacks — remembered so task-list rows stay skippable when `tasks` changes.
     val openTask: (Task) -> Unit = remember { { task -> editingTask = task; showSheet = true } }
     val toggleSimple: (Task) -> Unit = remember { { task -> viewModel.toggle(task) } }
+    val deleteWithUndo: (Task) -> Unit = remember {
+        { task ->
+            viewModel.remove(task.id)
+            scope.launch {
+                val result = snackbarHostState.showSnackbar(
+                    "Task deleted", "Undo", duration = SnackbarDuration.Short
+                )
+                if (result == SnackbarResult.ActionPerformed) viewModel.restore(task)
+            }
+        }
+    }
     val rescheduleTask: (Task, String) -> Unit = remember { { task, date -> viewModel.reschedule(task, date) } }
     val toggleWithUndo: (Task) -> Unit = remember(adsEnabled) {
         { task ->
@@ -181,6 +192,7 @@ fun AppScreen(
                 onListSelect = { activeListId = it },
                 onToggle = toggleWithUndo,
                 onOpen = openTask,
+                onDelete = deleteWithUndo,
                 onGoReview = { reviewing = true },
                 showStreak = settings.streaks,
                 rollover = settings.rollover,
