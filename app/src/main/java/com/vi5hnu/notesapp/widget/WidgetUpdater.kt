@@ -11,6 +11,6 @@ class WidgetUpdater @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     fun update() {
-        runCatching { TodayWidgetProvider.refresh(context) }
+        runCatching { TodayWidgetProvider.requestUpdate(context) }
     }
 }

@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import com.vi5hnu.notesapp.ads.ConsentManager
 import com.vi5hnu.notesapp.notifications.NotificationHelper
 import com.vi5hnu.notesapp.screen.AppScreen
+import com.vi5hnu.notesapp.widget.TodayWidgetProvider
 import com.vi5hnu.notesapp.ui.theme.NotesAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,6 +30,9 @@ class MainActivity : ComponentActivity() {
     // Task id from a tapped reminder notification; consumed by AppScreen to open that task.
     private val openTaskId = mutableStateOf<String?>(null)
 
+    // Set when the widget's + button launches the app to add a task.
+    private val openAdd = mutableStateOf(false)
+
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* reminders no-op if denied */ }
 
@@ -38,6 +42,7 @@ class MainActivity : ComponentActivity() {
 
         requestNotificationPermissionIfNeeded()
         openTaskId.value = intent?.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
+        openAdd.value = intent?.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false) ?: false
 
         // Gather consent, then initialize the ads SDK and enable ad surfaces.
         ConsentManager(this).gatherConsent(this) {
@@ -57,7 +62,9 @@ class MainActivity : ComponentActivity() {
                     },
                     adsEnabled = adsEnabled.value,
                     openTaskId = openTaskId.value,
-                    onTaskOpened = { openTaskId.value = null }
+                    onTaskOpened = { openTaskId.value = null },
+                    openAdd = openAdd.value,
+                    onAddOpened = { openAdd.value = false }
                 )
             }
         }
@@ -68,6 +75,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)?.let { openTaskId.value = it }
+        if (intent.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false)) openAdd.value = true
     }
 
     /** Ask for notification permission on Android 13+ so task reminders can be shown. */

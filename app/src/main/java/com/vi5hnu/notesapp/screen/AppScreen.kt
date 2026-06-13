@@ -62,7 +62,9 @@ fun AppScreen(
     onThemeToggle: (Boolean) -> Unit = {},
     adsEnabled: Boolean = false,
     openTaskId: String? = null,
-    onTaskOpened: () -> Unit = {}
+    onTaskOpened: () -> Unit = {},
+    openAdd: Boolean = false,
+    onAddOpened: () -> Unit = {}
 ) {
     val viewModel = viewModel<TaskViewModel>()
     val tasks by viewModel.tasks.collectAsState()
@@ -102,6 +104,17 @@ fun AppScreen(
     // Show one-shot messages (e.g. backup results) from the ViewModel.
     LaunchedEffect(Unit) {
         viewModel.messages.collect { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+    }
+
+    // Widget "+" launched the app to add a task.
+    LaunchedEffect(openAdd) {
+        if (openAdd) {
+            reviewing = false
+            selectedTab = 0
+            editingTask = null
+            showSheet = true
+            onAddOpened()
+        }
     }
 
     // Open the task from a tapped reminder notification, once the task list is available.
