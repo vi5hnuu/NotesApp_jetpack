@@ -41,7 +41,9 @@ class MainActivity : ComponentActivity() {
         val prefs = getSharedPreferences("tend_prefs", MODE_PRIVATE)
 
         requestNotificationPermissionIfNeeded()
-        consumeLaunchIntent(intent)
+        // Only handle launch extras on a genuine first creation — not on recreation/restore,
+        // where the original intent is redelivered and would re-trigger the add sheet.
+        if (savedInstanceState == null) consumeLaunchIntent(intent)
 
         // Gather consent, then initialize the ads SDK and enable ad surfaces.
         ConsentManager(this).gatherConsent(this) {

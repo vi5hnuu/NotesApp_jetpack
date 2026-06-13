@@ -44,10 +44,11 @@ class TodayRemoteViewsFactory(private val context: Context) : RemoteViewsService
         val is24h = DateFormat.is24HourFormat(context)
         val colorMap = buildColorMap(runBlocking { deps.listRepository().getLists().first() })
         items = runBlocking { deps.taskRepository().getTasks().first() }
-            .filter { !it.done && it.due != null && diffDays(it.due, today) <= 0 }
-            .sortedWith(compareBy({ it.due }, { it.time ?: "99:99" }))
+            // Match the app's "Today": due today, overdue, or no date — all active.
+            .filter { !it.done && (it.due == null || diffDays(it.due, today) <= 0) }
+            .sortedWith(compareBy({ it.due ?: "9999-99-99" }, { it.time ?: "99:99" }))
             .map { t ->
-                val overdue = diffDays(t.due!!, today) < 0
+                val overdue = t.due != null && diffDays(t.due, today) < 0
                 val meta = when {
                     overdue -> "Overdue"
                     t.time != null -> timeLabel(t.time, is24h)

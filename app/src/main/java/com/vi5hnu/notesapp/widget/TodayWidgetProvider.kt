@@ -65,7 +65,7 @@ class TodayWidgetProvider : AppWidgetProvider() {
                 .taskRepository()
             val today = todayStr()
             val count = repo.getTasks().first()
-                .count { !it.done && it.due != null && diffDays(it.due, today) <= 0 }
+                .count { !it.done && (it.due == null || diffDays(it.due, today) <= 0) }
             val date = longDate()
 
             ids.forEach { id ->
