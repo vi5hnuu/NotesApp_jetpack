@@ -31,6 +31,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +69,7 @@ fun TaskRow(
     onClick: (Task) -> Unit,
     showList: Boolean = false,
     showStreak: Boolean = true,
+    is24h: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val isOverdue = !task.done && task.due != null && diffDays(task.due, today) < 0
@@ -74,13 +77,14 @@ fun TaskRow(
     val doneSubCount = remember(subtasks) { subtasks.count { it.done } }
     val primary = MaterialTheme.colorScheme.primary
     val showPriorityBar = task.priority == "high" && !task.done
+    val haptic = LocalHapticFeedback.current
 
     // Memoized meta label — avoids SimpleDateFormat work on every recomposition / scroll frame.
-    val dueLabel = remember(task.due, task.time, today) {
+    val dueLabel = remember(task.due, task.time, today, is24h) {
         if (task.due == null) null
         else buildString {
             append(dateLabel(task.due))
-            if (task.time != null) append(" · ${timeLabel(task.time)}")
+            if (task.time != null) append(" · ${timeLabel(task.time, is24h)}")
         }
     }
 
@@ -123,7 +127,10 @@ fun TaskRow(
                 label = "checkBorder"
             )
             Surface(
-                onClick = { onToggle(task) },
+                onClick = {
+                    if (!task.done) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onToggle(task)
+                },
                 shape = CircleShape,
                 color = checkBg,
                 border = BorderStroke(2.2.dp, checkBorder),

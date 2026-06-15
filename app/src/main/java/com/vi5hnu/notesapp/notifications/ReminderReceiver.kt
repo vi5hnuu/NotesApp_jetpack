@@ -16,7 +16,9 @@ class ReminderReceiver : BroadcastReceiver() {
                 val title = intent.getStringExtra(EXTRA_TITLE) ?: return
                 val notificationId = intent.getIntExtra(EXTRA_NID, title.hashCode())
                 NotificationHelper.showTaskReminder(
-                    context, notificationId, title, intent.getStringExtra(EXTRA_SUB)
+                    context, notificationId, title,
+                    intent.getStringExtra(EXTRA_SUB),
+                    intent.getStringExtra(EXTRA_TASK_ID)
                 )
             }
             TYPE_NUDGE -> NotificationHelper.showDailyNudge(context)
@@ -28,6 +30,7 @@ class ReminderReceiver : BroadcastReceiver() {
         const val EXTRA_TITLE = "title"
         const val EXTRA_SUB = "sub"
         const val EXTRA_NID = "nid"
+        const val EXTRA_TASK_ID = "task_id"
         const val TYPE_TASK = "task"
         const val TYPE_NUDGE = "nudge"
     }

@@ -89,14 +89,18 @@ fun dayHeadLabel(dateStr: String): String {
     }
 }
 
-fun timeLabel(timeStr: String): String {
+fun timeLabel(timeStr: String, is24h: Boolean = false): String {
     return try {
         val parts = timeStr.split(":")
         val h = parts[0].toInt()
         val m = parts[1].toInt()
-        val suffix = if (h < 12) "AM" else "PM"
-        val h12 = if (h == 0) 12 else if (h > 12) h - 12 else h
-        if (m == 0) "$h12 $suffix" else "$h12:${m.toString().padStart(2, '0')} $suffix"
+        if (is24h) {
+            "${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}"
+        } else {
+            val suffix = if (h < 12) "AM" else "PM"
+            val h12 = if (h == 0) 12 else if (h > 12) h - 12 else h
+            if (m == 0) "$h12 $suffix" else "$h12:${m.toString().padStart(2, '0')} $suffix"
+        }
     } catch (e: Exception) { timeStr }
 }
 

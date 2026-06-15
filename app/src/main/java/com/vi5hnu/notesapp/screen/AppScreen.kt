@@ -34,6 +34,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +60,11 @@ import kotlinx.coroutines.launch
 fun AppScreen(
     darkTheme: Boolean = false,
     onThemeToggle: (Boolean) -> Unit = {},
-    adsEnabled: Boolean = false
+    adsEnabled: Boolean = false,
+    openTaskId: String? = null,
+    onTaskOpened: () -> Unit = {},
+    openAdd: Boolean = false,
+    onAddOpened: () -> Unit = {}
 ) {
     val viewModel = viewModel<TaskViewModel>()
     val tasks by viewModel.tasks.collectAsState()
@@ -95,7 +100,39 @@ fun AppScreen(
     var editingList by remember { mutableStateOf<TaskList?>(null) }
     var listPendingDelete by remember { mutableStateOf<String?>(null) }
     val showFab = (selectedTab == 0 || selectedTab == 1) && !reviewing
+
+    // Show one-shot messages (e.g. backup results) from the ViewModel.
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+    }
+
+    // Widget "+" launched the app to add a task.
+    LaunchedEffect(openAdd) {
+        if (openAdd) {
+            reviewing = false
+            selectedTab = 0
+            editingTask = null
+            showSheet = true
+            onAddOpened()
+        }
+    }
+
+    // Open the task from a tapped reminder notification, once the task list is available.
+    LaunchedEffect(openTaskId, tasks) {
+        val id = openTaskId ?: return@LaunchedEffect
+        val match = tasks.firstOrNull { it.id.toString() == id }
+        if (match != null) {
+            reviewing = false
+            selectedTab = 0
+            editingTask = match
+            showSheet = true
+            onTaskOpened()
+        } else if (tasks.isNotEmpty()) {
+            onTaskOpened() // task no longer exists — drop the request
+        }
+    }
     val today = remember { todayStr() }
+    val is24h = remember { android.text.format.DateFormat.is24HourFormat(context) }
     val overdueCount = remember(tasks) {
         tasks.count { !it.done && it.due != null && diffDays(it.due, today) < 0 }
     }
@@ -103,6 +140,17 @@ fun AppScreen(
     // Stable callbacks — remembered so task-list rows stay skippable when `tasks` changes.
     val openTask: (Task) -> Unit = remember { { task -> editingTask = task; showSheet = true } }
     val toggleSimple: (Task) -> Unit = remember { { task -> viewModel.toggle(task) } }
+    val deleteWithUndo: (Task) -> Unit = remember {
+        { task ->
+            viewModel.remove(task.id)
+            scope.launch {
+                val result = snackbarHostState.showSnackbar(
+                    "Task deleted", "Undo", duration = SnackbarDuration.Short
+                )
+                if (result == SnackbarResult.ActionPerformed) viewModel.restore(task)
+            }
+        }
+    }
     val rescheduleTask: (Task, String) -> Unit = remember { { task, date -> viewModel.reschedule(task, date) } }
     val toggleWithUndo: (Task) -> Unit = remember(adsEnabled) {
         { task ->
@@ -162,9 +210,11 @@ fun AppScreen(
                 onListSelect = { activeListId = it },
                 onToggle = toggleWithUndo,
                 onOpen = openTask,
+                onDelete = deleteWithUndo,
                 onGoReview = { reviewing = true },
                 showStreak = settings.streaks,
                 rollover = settings.rollover,
+                is24h = is24h,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 1 -> ListsScreen(
@@ -180,12 +230,15 @@ fun AppScreen(
                 onOpen = openTask,
                 showStreak = settings.streaks,
                 autoArchive = settings.archive,
+                is24h = is24h,
                 modifier = Modifier.padding(innerPadding)
             )
             selectedTab == 3 -> SettingsScreen(
                 darkTheme = darkTheme,
                 onThemeToggle = onThemeToggle,
                 settings = settings,
+                onExport = { viewModel.exportTo(it) },
+                onImport = { viewModel.importFrom(it) },
                 onSettingsChange = { s ->
                     val remindersChanged = s.reminders != settings.reminders
                     val nudgeChanged = s.nudge != settings.nudge || s.nudgeTime != settings.nudgeTime

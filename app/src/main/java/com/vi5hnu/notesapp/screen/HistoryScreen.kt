@@ -42,6 +42,7 @@ fun HistoryScreen(
     onOpen: (Task) -> Unit,
     showStreak: Boolean = true,
     autoArchive: Boolean = false,
+    is24h: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val today = remember { todayStr() }
@@ -155,6 +156,7 @@ fun HistoryScreen(
                         onToggle = onToggle, onClick = onOpen,
                         showList = true,
                         showStreak = showStreak,
+                        is24h = is24h,
                         modifier = Modifier
                             .animateItemPlacement()
                             .padding(horizontal = 16.dp).padding(bottom = 10.dp)

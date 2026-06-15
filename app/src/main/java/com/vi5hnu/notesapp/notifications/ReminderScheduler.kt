@@ -98,6 +98,7 @@ class ReminderScheduler @Inject constructor(
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra(ReminderReceiver.EXTRA_TYPE, ReminderReceiver.TYPE_TASK)
             putExtra(ReminderReceiver.EXTRA_NID, taskId.hashCode())
+            putExtra(ReminderReceiver.EXTRA_TASK_ID, taskId)
             if (title != null) putExtra(ReminderReceiver.EXTRA_TITLE, title)
             if (sub != null) putExtra(ReminderReceiver.EXTRA_SUB, sub)
         }
