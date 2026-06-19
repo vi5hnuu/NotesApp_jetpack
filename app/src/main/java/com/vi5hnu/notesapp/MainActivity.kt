@@ -80,20 +80,34 @@ class MainActivity : ComponentActivity() {
 
     /**
      * Reads the one-shot launch extras (open-task / open-add) and **removes them** so they don't
-     * fire again if the activity is recreated (rotation, return from background) and re-reads its
-     * intent. The cleaned intent is stored back via [setIntent].
+     * fire again if the activity is recreated and re-reads its intent.
+     *
+     * Widget deep links carry a tap-time stamp ([TodayWidgetProvider.EXTRA_REQUEST_TS]). The system
+     * re-delivers an activity's *base intent* on a cold relaunch (process death → reopen from
+     * launcher/recents), which would otherwise re-trigger the add sheet on every launch. We honour a
+     * stamped deep link only while it is fresh, so a stale re-delivered base intent is ignored.
+     * Notification intents carry no stamp and are always honoured. The cleaned intent is stored
+     * back via [setIntent].
      */
     private fun consumeLaunchIntent(intent: Intent?) {
         intent ?: return
-        intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)?.let {
-            openTaskId.value = it
-            intent.removeExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
+        val ts = intent.getLongExtra(TodayWidgetProvider.EXTRA_REQUEST_TS, 0L)
+        val stale = ts != 0L && System.currentTimeMillis() - ts > FRESH_WINDOW_MS
+
+        if (!stale) {
+            intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)?.let { openTaskId.value = it }
+            if (intent.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false)) openAdd.value = true
         }
-        if (intent.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false)) {
-            openAdd.value = true
-            intent.removeExtra(TodayWidgetProvider.EXTRA_OPEN_ADD)
-        }
+        // Clear payload + stamp regardless, so a re-read of this intent never re-fires.
+        intent.removeExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
+        intent.removeExtra(TodayWidgetProvider.EXTRA_OPEN_ADD)
+        intent.removeExtra(TodayWidgetProvider.EXTRA_REQUEST_TS)
         setIntent(intent)
+    }
+
+    companion object {
+        /** A widget deep link is honoured only within this window of its tap time. */
+        const val FRESH_WINDOW_MS = 30_000L
     }
 
     /** Ask for notification permission on Android 13+ so task reminders can be shown. */

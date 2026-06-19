@@ -2,6 +2,7 @@ package com.vi5hnu.notesapp.screen
 
 import android.app.Activity
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import com.vi5hnu.notesapp.utils.diffDays
@@ -151,7 +152,17 @@ fun AppScreen(
             }
         }
     }
-    val rescheduleTask: (Task, String) -> Unit = remember { { task, date -> viewModel.reschedule(task, date) } }
+    val rescheduleTask: (Task, String) -> Unit = remember(today) {
+        { task, date ->
+            viewModel.reschedule(task, date)
+            val label = when (date) {
+                today -> "today"
+                com.vi5hnu.notesapp.utils.addDays(today, 1) -> "tomorrow"
+                else -> com.vi5hnu.notesapp.utils.dateLabel(date)
+            }
+            scope.launch { snackbarHostState.showSnackbar("Moved to $label") }
+        }
+    }
     val toggleWithUndo: (Task) -> Unit = remember(adsEnabled) {
         { task ->
             viewModel.toggle(task)
@@ -165,6 +176,15 @@ fun AppScreen(
                     if (result == SnackbarResult.ActionPerformed) viewModel.toggle(task)
                 }
             }
+        }
+    }
+
+    // Back steps into the app instead of exiting: Review → Today, other tabs → Today.
+    // (Bottom sheets handle their own back; search-exit is handled inside TodayScreen.)
+    BackHandler(enabled = reviewing || selectedTab != 0) {
+        when {
+            reviewing -> reviewing = false
+            else -> selectedTab = 0
         }
     }
 

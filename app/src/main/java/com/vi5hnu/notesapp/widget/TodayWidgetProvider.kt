@@ -10,6 +10,7 @@ import android.net.Uri
 import android.widget.RemoteViews
 import com.vi5hnu.notesapp.MainActivity
 import com.vi5hnu.notesapp.R
+import com.vi5hnu.notesapp.notifications.NotificationHelper
 import com.vi5hnu.notesapp.utils.diffDays
 import com.vi5hnu.notesapp.utils.longDate
 import com.vi5hnu.notesapp.utils.todayStr
@@ -40,8 +41,49 @@ class TodayWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    /**
+     * Click trampoline + clock/date handling. Widget row/+ taps arrive here (not the activity
+     * directly) so we can stamp the *tap time* on the launch intent: [MainActivity] only honours a
+     * deep link whose stamp is fresh, which stops a re-delivered stale base intent from re-opening
+     * the add sheet on later launches. On date/time/timezone changes we refresh so "today" rolls
+     * over at midnight.
+     */
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            ACTION_OPEN_ADD -> startApp(context) { putExtra(EXTRA_OPEN_ADD, true) }
+            ACTION_OPEN_TASK -> {
+                val taskId = intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
+                startApp(context) {
+                    if (taskId != null) putExtra(NotificationHelper.EXTRA_OPEN_TASK_ID, taskId)
+                }
+            }
+            Intent.ACTION_DATE_CHANGED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED -> requestUpdate(context)
+            else -> super.onReceive(context, intent)
+        }
+    }
+
+    /** Launch the app at tap time with a freshness stamp the activity validates. */
+    private fun startApp(context: Context, payload: Intent.() -> Unit) {
+        val launch = Intent(context, MainActivity::class.java)
+            .addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+            )
+            .putExtra(EXTRA_REQUEST_TS, System.currentTimeMillis())
+            .apply(payload)
+        runCatching { context.startActivity(launch) }
+    }
+
     companion object {
         const val EXTRA_OPEN_ADD = "open_add"
+        /** Tap-time stamp; the activity ignores deep links older than [MainActivity.FRESH_WINDOW_MS]. */
+        const val EXTRA_REQUEST_TS = "request_ts"
+
+        private const val ACTION_OPEN_ADD = "com.vi5hnu.notesapp.widget.OPEN_ADD"
+        private const val ACTION_OPEN_TASK = "com.vi5hnu.notesapp.widget.OPEN_TASK"
 
         private fun widgetIds(context: Context): IntArray =
             AppWidgetManager.getInstance(context)
@@ -73,24 +115,23 @@ class TodayWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_date, date)
                 views.setTextViewText(R.id.widget_count, if (count == 0) "" else "$count to do")
 
-                // Scrollable list backed by TodayWidgetService; unique data per id.
+                // Scrollable list backed by TodayWidgetService. The data Uri changes every render
+                // so setRemoteAdapter forces the host to rebind the factory and call
+                // onDataSetChanged with fresh DB data — otherwise an unchanged Uri can be skipped
+                // and the list shows stale rows (e.g. an "Overdue" tag after rescheduling).
                 val serviceIntent = Intent(context, TodayWidgetService::class.java).apply {
-                    data = Uri.parse("noteswidget://$id")
+                    data = Uri.parse("noteswidget://$id/${System.currentTimeMillis()}")
                 }
                 views.setRemoteAdapter(R.id.widget_list, serviceIntent)
                 views.setEmptyView(R.id.widget_list, R.id.widget_empty)
 
-                // Tapping a row opens that task (fill-in intent set by the factory).
-                val itemTemplate = PendingIntent.getActivity(
-                    context, 1, Intent(context, MainActivity::class.java),
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-                )
-                views.setPendingIntentTemplate(R.id.widget_list, itemTemplate)
+                // Tapping a row opens that task; the factory supplies EXTRA_OPEN_TASK_ID as the
+                // fill-in, which the trampoline reads in onReceive and stamps with the tap time.
+                views.setPendingIntentTemplate(R.id.widget_list, trampoline(context, ACTION_OPEN_TASK))
 
                 views.setOnClickPendingIntent(R.id.widget_header, openApp(context, requestCode = 2))
                 views.setOnClickPendingIntent(
-                    R.id.widget_add,
-                    openApp(context, requestCode = 3, openAdd = true)
+                    R.id.widget_add, trampoline(context, ACTION_OPEN_ADD)
                 )
 
                 manager.updateAppWidget(id, views)
@@ -98,10 +139,20 @@ class TodayWidgetProvider : AppWidgetProvider() {
             manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_list)
         }
 
-        private fun openApp(context: Context, requestCode: Int, openAdd: Boolean = false): PendingIntent {
+        /** Broadcast PendingIntent back to this provider so the click is handled at tap time. */
+        private fun trampoline(context: Context, action: String): PendingIntent {
+            val intent = Intent(context, TodayWidgetProvider::class.java).setAction(action)
+            // MUTABLE so the row template can merge its per-task fill-in (the task id).
+            return PendingIntent.getBroadcast(
+                context, action.hashCode(), intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            )
+        }
+
+        /** Plain "open the app" with no deep link (header tap). */
+        private fun openApp(context: Context, requestCode: Int): PendingIntent {
             val intent = Intent(context, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .apply { if (openAdd) putExtra(EXTRA_OPEN_ADD, true) }
             return PendingIntent.getActivity(
                 context, requestCode, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

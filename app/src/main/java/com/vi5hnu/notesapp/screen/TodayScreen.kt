@@ -1,5 +1,6 @@
 package com.vi5hnu.notesapp.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -120,6 +121,11 @@ fun TodayScreen(
     }
 
     var showDone by remember { mutableStateOf(false) }
+
+    // Back exits search (clearing the query) before the app handles it elsewhere.
+    BackHandler(enabled = searchActive) {
+        keyboard?.hide(); searchActive = false; searchQuery = ""
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),

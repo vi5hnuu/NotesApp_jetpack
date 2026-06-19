@@ -30,6 +30,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.NotesApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -58,6 +59,13 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- Widget click trampolines (open add / open task) -->
+                <action android:name="com.vi5hnu.notesapp.widget.OPEN_ADD" />
+                <action android:name="com.vi5hnu.notesapp.widget.OPEN_TASK" />
+                <!-- Roll the "today" set over at midnight / clock or timezone changes -->
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
