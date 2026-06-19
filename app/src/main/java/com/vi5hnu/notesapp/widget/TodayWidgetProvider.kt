@@ -59,8 +59,27 @@ class TodayWidgetProvider : AppWidgetProvider() {
             }
             Intent.ACTION_DATE_CHANGED,
             Intent.ACTION_TIME_CHANGED,
-            Intent.ACTION_TIMEZONE_CHANGED -> requestUpdate(context)
+            Intent.ACTION_TIMEZONE_CHANGED -> refreshAsync(context)
             else -> super.onReceive(context, intent)
+        }
+    }
+
+    /**
+     * Refresh from a broadcast we receive directly (date/clock changes). Uses [goAsync] so the
+     * process stays alive until the render finishes — date changes can cold-start the process just
+     * for this broadcast, and a detached coroutine would otherwise be killed mid-render.
+     */
+    private fun refreshAsync(context: Context) {
+        val pending = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val manager = AppWidgetManager.getInstance(context) ?: return@launch
+                renderAll(context, manager, widgetIds(context))
+            } catch (_: Exception) {
+                // Best-effort; the system retries on the next update period.
+            } finally {
+                pending.finish()
+            }
         }
     }
 
@@ -117,8 +136,10 @@ class TodayWidgetProvider : AppWidgetProvider() {
 
                 // Scrollable list backed by TodayWidgetService. The data Uri changes every render
                 // so setRemoteAdapter forces the host to rebind the factory and call
-                // onDataSetChanged with fresh DB data — otherwise an unchanged Uri can be skipped
-                // and the list shows stale rows (e.g. an "Overdue" tag after rescheduling).
+                // onDataSetChanged once with fresh DB data — otherwise an unchanged Uri can be
+                // skipped and the list shows stale rows (e.g. an "Overdue" tag after rescheduling).
+                // This rebind is the sole refresh trigger; no extra notifyAppWidgetViewDataChanged
+                // is needed (which would re-run onDataSetChanged and read the DB a second time).
                 val serviceIntent = Intent(context, TodayWidgetService::class.java).apply {
                     data = Uri.parse("noteswidget://$id/${System.currentTimeMillis()}")
                 }
@@ -136,7 +157,6 @@ class TodayWidgetProvider : AppWidgetProvider() {
 
                 manager.updateAppWidget(id, views)
             }
-            manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_list)
         }
 
         /** Broadcast PendingIntent back to this provider so the click is handled at tap time. */

@@ -85,18 +85,26 @@ class MainActivity : ComponentActivity() {
      * Widget deep links carry a tap-time stamp ([TodayWidgetProvider.EXTRA_REQUEST_TS]). The system
      * re-delivers an activity's *base intent* on a cold relaunch (process death → reopen from
      * launcher/recents), which would otherwise re-trigger the add sheet on every launch. We honour a
-     * stamped deep link only while it is fresh, so a stale re-delivered base intent is ignored.
-     * Notification intents carry no stamp and are always honoured. The cleaned intent is stored
-     * back via [setIntent].
+     * stamped deep link only while it is fresh **and** not already consumed: [setIntent] cannot
+     * rewrite the persisted base intent, so we also remember the last consumed stamp in prefs to
+     * dedupe a fresh base intent that gets redelivered within the freshness window. Notification
+     * intents carry no stamp and are always honoured. The cleaned intent is stored back via
+     * [setIntent].
      */
     private fun consumeLaunchIntent(intent: Intent?) {
         intent ?: return
         val ts = intent.getLongExtra(TodayWidgetProvider.EXTRA_REQUEST_TS, 0L)
-        val stale = ts != 0L && System.currentTimeMillis() - ts > FRESH_WINDOW_MS
+        val prefs = getSharedPreferences("tend_prefs", MODE_PRIVATE)
+        val lastConsumed = prefs.getLong(KEY_LAST_DEEPLINK_TS, 0L)
+        // A stamped link is stale if it timed out or was already consumed; unstamped (notification)
+        // links have ts == 0 and are always honoured.
+        val stale = ts != 0L &&
+            (System.currentTimeMillis() - ts > FRESH_WINDOW_MS || ts <= lastConsumed)
 
         if (!stale) {
             intent.getStringExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)?.let { openTaskId.value = it }
             if (intent.getBooleanExtra(TodayWidgetProvider.EXTRA_OPEN_ADD, false)) openAdd.value = true
+            if (ts != 0L) prefs.edit().putLong(KEY_LAST_DEEPLINK_TS, ts).apply()
         }
         // Clear payload + stamp regardless, so a re-read of this intent never re-fires.
         intent.removeExtra(NotificationHelper.EXTRA_OPEN_TASK_ID)
@@ -108,6 +116,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         /** A widget deep link is honoured only within this window of its tap time. */
         const val FRESH_WINDOW_MS = 30_000L
+        /** Last consumed widget deep-link stamp — dedupes a redelivered, still-fresh base intent. */
+        private const val KEY_LAST_DEEPLINK_TS = "last_deeplink_ts"
     }
 
     /** Ask for notification permission on Android 13+ so task reminders can be shown. */
