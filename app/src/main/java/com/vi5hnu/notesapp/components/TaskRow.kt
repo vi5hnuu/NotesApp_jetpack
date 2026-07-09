@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
@@ -180,7 +182,7 @@ fun TaskRow(
                         // Streak or recur label
                         if (task.recur != null && showStreak) {
                             if (task.streak > 1) {
-                                MetaBadge(text = "🔥 ${task.streak}", warn = false)
+                                MetaBadge(text = "${task.streak}", warn = false, icon = Icons.Filled.LocalFireDepartment)
                             } else {
                                 MetaBadge(text = recurLabel(task.recur), warn = false)
                             }
@@ -243,19 +245,25 @@ private fun SubtaskProgress(done: Int, total: Int) {
 }
 
 @Composable
-private fun MetaBadge(text: String, warn: Boolean) {
+private fun MetaBadge(text: String, warn: Boolean, icon: ImageVector? = null) {
+    val fg = if (warn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
         shape = RoundedCornerShape(7.dp),
         color = if (warn) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
         else MaterialTheme.colorScheme.surfaceVariant
     ) {
-        Text(
-            text = text,
+        Row(
             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (warn) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            if (icon != null) Icon(icon, null, Modifier.size(12.dp), tint = fg)
+            Text(
+                text = text,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = fg
+            )
+        }
     }
 }

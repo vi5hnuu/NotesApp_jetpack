@@ -116,24 +116,32 @@ class TaskViewModel @Inject constructor(
                 val rawNext = nextOccurrence(task.due ?: today, task.recur)
                 // Stop recurring once the next occurrence would pass the user's end date.
                 val next = if (rawNext != null && task.until != null && rawNext > task.until) null else rawNext
-                val snap = task.copy(
-                    id = UUID.randomUUID(),
-                    done = true,
-                    completedAt = today,
-                    recur = null,
-                    until = null,
-                    streak = 0,
-                    subtasks = "[]"
-                )
-                repo.add(snap)
-                repo.update(
-                    task.copy(
-                        due = next ?: task.due,
-                        streak = task.streak + 1,
-                        done = next == null,
-                        completedAt = if (next == null) today else null
+                if (next == null) {
+                    // Series ended: complete this task in place and stop recurring. No snapshot —
+                    // adding one here would duplicate the final completion in Done/History.
+                    repo.update(task.copy(done = true, completedAt = today, recur = null, until = null))
+                } else {
+                    // Series continues: snapshot this occurrence into history, then advance the
+                    // recurring task to its next due date and bump the streak.
+                    val snap = task.copy(
+                        id = UUID.randomUUID(),
+                        done = true,
+                        completedAt = today,
+                        recur = null,
+                        until = null,
+                        streak = 0,
+                        subtasks = "[]"
                     )
-                )
+                    repo.add(snap)
+                    repo.update(
+                        task.copy(
+                            due = next,
+                            streak = task.streak + 1,
+                            done = false,
+                            completedAt = null
+                        )
+                    )
+                }
             } else {
                 repo.update(task.copy(done = true, completedAt = today))
             }
