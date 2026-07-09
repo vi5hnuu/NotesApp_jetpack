@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.EditCalendar
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -160,12 +162,18 @@ fun ReviewScreen(
                                 Spacer(Modifier.height(6.dp))
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Surface(shape = RoundedCornerShape(7.dp), color = MaterialTheme.colorScheme.primary.copy(0.12f)) {
-                                        Text(
-                                            "⚠ ${if (od == 1) "1 day overdue" else "$od days overdue"}",
+                                        Row(
                                             Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
+                                            Icon(Icons.Outlined.ErrorOutline, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
+                                            Text(
+                                                if (od == 1) "1 day overdue" else "$od days overdue",
+                                                fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
                                     }
                                     if (list != null) {
                                         Surface(shape = RoundedCornerShape(7.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
@@ -213,9 +221,10 @@ fun ReviewScreen(
                                 color = MaterialTheme.colorScheme.surfaceVariant,
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(0.5f))
                             ) {
-                                Text(
-                                    "📅", Modifier.padding(10.dp), fontSize = 16.sp,
-                                    textAlign = TextAlign.Center
+                                Icon(
+                                    Icons.Outlined.EditCalendar, "Reschedule to another date",
+                                    Modifier.padding(10.dp).size(20.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }

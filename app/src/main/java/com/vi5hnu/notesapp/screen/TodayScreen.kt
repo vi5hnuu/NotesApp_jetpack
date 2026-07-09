@@ -27,7 +27,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -135,7 +139,7 @@ fun TodayScreen(
         item {
             Column(
                 Modifier.fillMaxWidth().statusBarsPadding()
-                    .padding(horizontal = 22.dp).padding(top = 10.dp, bottom = 4.dp)
+                    .padding(horizontal = 22.dp).padding(top = 2.dp, bottom = 4.dp)
             ) {
                 if (searchActive) {
                     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -196,17 +200,16 @@ fun TodayScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                             Box(
-                                Modifier.size(17.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)),
+                                Modifier.size(28.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(9.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(11.dp))
+                                Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
                             }
                             Text(
-                                "Notes", fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onBackground,
-                                style = MaterialTheme.typography.titleMedium
+                                "Notes", fontWeight = FontWeight.Bold, fontSize = 20.sp,
+                                letterSpacing = (-0.2).sp, color = MaterialTheme.colorScheme.onBackground
                             )
                         }
                         Surface(
@@ -340,9 +343,9 @@ fun TodayScreen(
                         )
                         CountBadge(completedToday.size)
                         Spacer(Modifier.weight(1f))
-                        Text(
-                            if (showDone) "▲" else "▼",
-                            fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Icon(
+                            if (showDone) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -384,7 +387,7 @@ private fun AttentionCard(count: Int, onReview: () -> Unit, modifier: Modifier =
                 modifier = Modifier.size(38.dp)
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("⚠", fontSize = 18.sp)
+                    Icon(Icons.Outlined.WarningAmber, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimary)
                 }
             }
             Column(Modifier.weight(1f)) {
@@ -498,7 +501,7 @@ private fun EmptyTodayState() {
     ) {
         Surface(Modifier.size(96.dp), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("🌿", fontSize = 40.sp)
+                Icon(Icons.Outlined.Spa, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(20.dp))

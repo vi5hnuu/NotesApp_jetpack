@@ -14,6 +14,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.MailOutline
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material.icons.outlined.Smartphone
+import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +54,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -97,7 +112,7 @@ fun SettingsScreen(
         SettingGroupLabel("Appearance")
         SettingGroup {
             SettingRow(
-                emoji = if (darkTheme) "🌙" else "☀️",
+                icon = if (darkTheme) Icons.Outlined.DarkMode else Icons.Outlined.LightMode,
                 title = "Theme",
                 sub = null,
                 control = {
@@ -115,7 +130,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(6.dp))
         SettingGroupLabel("Behavior")
         SettingGroup {
-            SettingRow("⚠️", "Roll over missed tasks",
+            SettingRow(Icons.Outlined.Restore, "Roll over missed tasks",
                 "Overdue tasks move to “Needs attention” instead of vanishing",
                 onClick = { onSettingsChange(settings.copy(rollover = !settings.rollover)) },
                 control = {
@@ -127,7 +142,7 @@ fun SettingsScreen(
                 }
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingRow("🔔", "Time reminders", "Notify at a task's set time",
+            SettingRow(Icons.Outlined.Notifications, "Time reminders", "Notify at a task's set time",
                 onClick = { onSettingsChange(settings.copy(reminders = !settings.reminders)) },
                 control = {
                     Switch(
@@ -138,7 +153,7 @@ fun SettingsScreen(
                 }
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingRow("🔥", "Habit streaks", "Track streaks for repeating tasks",
+            SettingRow(Icons.Filled.LocalFireDepartment, "Habit streaks", "Track streaks for repeating tasks",
                 onClick = { onSettingsChange(settings.copy(streaks = !settings.streaks)) },
                 control = {
                     Switch(
@@ -149,7 +164,7 @@ fun SettingsScreen(
                 }
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingRow("☀️", "Daily planning nudge",
+            SettingRow(Icons.Outlined.WbSunny, "Daily planning nudge",
                 "${timeLabel(settings.nudgeTime, is24h)} — Plan your day",
                 onClick = { onSettingsChange(settings.copy(nudge = !settings.nudge)) },
                 control = {
@@ -195,12 +210,12 @@ fun SettingsScreen(
         Spacer(Modifier.height(6.dp))
         SettingGroupLabel("Data")
         SettingGroup {
-            SettingRow("📱", "Everything stays on this device",
+            SettingRow(Icons.Outlined.Smartphone, "Everything stays on this device",
                 "No account, no cloud — your tasks never leave your phone",
-                control = { Text("📌", fontSize = 16.sp) }
+                control = { Icon(Icons.Outlined.Lock, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) }
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingRow("🗂️", "Auto-archive completed", "After 30 days",
+            SettingRow(Icons.Outlined.Inventory2, "Auto-archive completed", "After 30 days",
                 onClick = { onSettingsChange(settings.copy(archive = !settings.archive)) },
                 control = {
                     Switch(
@@ -211,11 +226,11 @@ fun SettingsScreen(
                 }
             )
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            LinkRow("⬆️", "Export backup", sub = "Save all tasks & lists to a file") {
+            LinkRow(Icons.Outlined.FileUpload, "Export backup", sub = "Save all tasks & lists to a file") {
                 exportLauncher.launch("notes-backup.json")
             }
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            LinkRow("⬇️", "Import backup", sub = "Restore from a backup file") {
+            LinkRow(Icons.Outlined.FileDownload, "Import backup", sub = "Restore from a backup file") {
                 importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
             }
         }
@@ -223,11 +238,11 @@ fun SettingsScreen(
         Spacer(Modifier.height(6.dp))
         SettingGroupLabel("Legal & Support")
         SettingGroup {
-            LinkRow("🔒", "Privacy Policy") { openUrl(context, PRIVACY_URL) }
+            LinkRow(Icons.Outlined.Lock, "Privacy Policy") { openUrl(context, PRIVACY_URL) }
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            LinkRow("📄", "Terms of Service") { openUrl(context, TERMS_URL) }
+            LinkRow(Icons.Outlined.Description, "Terms of Service") { openUrl(context, TERMS_URL) }
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-            LinkRow("✉️", "Contact support", sub = SUPPORT_EMAIL) { sendSupportEmail(context) }
+            LinkRow(Icons.Outlined.MailOutline, "Contact support", sub = SUPPORT_EMAIL) { sendSupportEmail(context) }
         }
 
         Spacer(Modifier.height(40.dp))
@@ -253,7 +268,7 @@ fun SettingsScreen(
 
 /** A tappable settings row that navigates out (e.g. opens a URL or email). */
 @Composable
-private fun LinkRow(emoji: String, title: String, sub: String? = null, onClick: () -> Unit) {
+private fun LinkRow(icon: ImageVector, title: String, sub: String? = null, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -264,7 +279,9 @@ private fun LinkRow(emoji: String, title: String, sub: String? = null, onClick: 
             color = MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier.size(36.dp)
         ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(emoji, fontSize = 17.sp) }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(19.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Column(Modifier.weight(1f)) {
             Text(title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
@@ -326,7 +343,7 @@ private fun NotificationsOffHint(onEnable: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("🔕", fontSize = 18.sp)
+            Icon(Icons.Outlined.NotificationsOff, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
             Column(Modifier.weight(1f)) {
                 Text(
                     "Notifications are off", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
@@ -359,7 +376,7 @@ private fun openNotificationSettings(context: Context) {
 
 @Composable
 private fun SettingRow(
-    emoji: String,
+    icon: ImageVector,
     title: String,
     sub: String?,
     onClick: (() -> Unit)? = null,
@@ -379,7 +396,7 @@ private fun SettingRow(
             modifier = Modifier.size(36.dp)
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(emoji, fontSize = 17.sp)
+                Icon(icon, null, Modifier.size(19.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Column(Modifier.weight(1f)) {

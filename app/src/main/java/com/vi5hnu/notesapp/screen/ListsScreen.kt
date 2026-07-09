@@ -18,6 +18,15 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.BusinessCenter
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FormatListBulleted
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Inbox
+import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -105,7 +115,7 @@ fun ListsScreen(
                         modifier = Modifier.size(46.dp)
                     ) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(listEmoji(list.id), fontSize = 22.sp)
+                            Icon(listIcon(list.id), null, Modifier.size(22.dp), tint = Color.White)
                         }
                     }
                     Column(Modifier.weight(1f)) {
@@ -153,7 +163,7 @@ fun ListsScreen(
                         modifier = Modifier.size(46.dp)
                     ) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("+", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(Icons.Default.Add, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Text("New list", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -163,13 +173,13 @@ fun ListsScreen(
     }
 }
 
-private fun listEmoji(id: String) = when (id) {
-    "inbox" -> "📥"
-    "work" -> "💼"
-    "home" -> "🏠"
-    "groceries" -> "🛒"
-    "health" -> "❤️"
-    else -> "📋"
+private fun listIcon(id: String): ImageVector = when (id) {
+    "inbox" -> Icons.Outlined.Inbox
+    "work" -> Icons.Outlined.BusinessCenter
+    "home" -> Icons.Outlined.Home
+    "groceries" -> Icons.Outlined.ShoppingCart
+    "health" -> Icons.Outlined.Favorite
+    else -> Icons.Outlined.FormatListBulleted
 }
 
 @Composable

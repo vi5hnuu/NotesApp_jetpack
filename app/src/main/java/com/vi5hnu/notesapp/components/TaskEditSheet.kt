@@ -24,9 +24,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.EventBusy
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -52,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -254,9 +262,9 @@ fun TaskEditSheet(
                     OptChip(
                         label = if (isCustom) dateLabel(due) else "Pick",
                         selected = showCal || isCustom,
-                        icon = "📅"
+                        icon = Icons.Outlined.CalendarMonth
                     ) { showCal = !showCal; noDue = false }
-                    OptChip(label = "No date", selected = noDue, icon = "✕") {
+                    OptChip(label = "No date", selected = noDue, icon = Icons.Outlined.EventBusy) {
                         noDue = true; time = null; showCal = false
                     }
                 }
@@ -285,14 +293,14 @@ fun TaskEditSheet(
                             OptChip(
                                 label = timeLabel(t, is24h),
                                 selected = time == t,
-                                icon = "🔔"
+                                icon = Icons.Outlined.Notifications
                             ) { time = if (time == t) null else t }
                         }
                         val isCustomTime = time != null && time !in QUICK_TIMES
                         OptChip(
                             label = if (isCustomTime) timeLabel(time!!, is24h) else "Custom",
                             selected = isCustomTime,
-                            icon = "⏰"
+                            icon = Icons.Outlined.Schedule
                         ) {
                             showTimePicker(context, time) { picked -> time = picked }
                         }
@@ -321,7 +329,7 @@ fun TaskEditSheet(
                         OptChip(label = "No end", selected = until == null) { until = null }
                         listOf(30 to "1 month", 90 to "3 months", 365 to "1 year").forEach { (days, label) ->
                             val date = addDays(endBase, days)
-                            OptChip(label = label, selected = until == date, icon = "📅") { until = date }
+                            OptChip(label = label, selected = until == date, icon = Icons.Outlined.CalendarMonth) { until = date }
                         }
                     }
                 }
@@ -359,7 +367,7 @@ fun TaskEditSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("+", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(Icons.Default.Add, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
                                 "Add notes & subtasks",
                                 fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
@@ -447,7 +455,7 @@ fun TaskEditSheet(
                                     .clickable { subtasks = subtasks.filter { it.id != sub.id } },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("✕", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Outlined.Close, "Remove subtask", Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -461,7 +469,7 @@ fun TaskEditSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text("+", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Add, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.primary)
                             Text(
                                 "Add subtask", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
@@ -534,7 +542,7 @@ private fun FieldLabel(text: String) {
 private fun OptChip(
     label: String,
     selected: Boolean,
-    icon: String? = null,
+    icon: ImageVector? = null,
     accentColor: Color? = null,
     onClick: () -> Unit
 ) {
@@ -554,7 +562,12 @@ private fun OptChip(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            if (icon != null) Text(icon, fontSize = 13.sp)
+            if (icon != null) {
+                Icon(
+                    icon, null, modifier = Modifier.size(15.dp),
+                    tint = if (selected) tint else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Text(
                 label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                 color = if (selected) tint else MaterialTheme.colorScheme.onSurface
@@ -599,7 +612,7 @@ private fun MiniCalendar(
                     shape = RoundedCornerShape(10.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.size(32.dp)
-                ) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("‹", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface) } }
+                ) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(Icons.Default.ChevronLeft, "Previous month", Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface) } }
                 Surface(
                     onClick = {
                         if (month == 11) { month = 0; year++ } else month++
@@ -607,7 +620,7 @@ private fun MiniCalendar(
                     shape = RoundedCornerShape(10.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.size(32.dp)
-                ) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("›", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface) } }
+                ) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(Icons.Default.ChevronRight, "Next month", Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurface) } }
             }
         }
         Spacer(Modifier.height(12.dp))
