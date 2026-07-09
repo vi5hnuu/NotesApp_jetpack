@@ -119,7 +119,8 @@ class TaskViewModel @Inject constructor(
                 if (next == null) {
                     // Series ended: complete this task in place and stop recurring. No snapshot —
                     // adding one here would duplicate the final completion in Done/History.
-                    repo.update(task.copy(done = true, completedAt = today, recur = null, until = null))
+                    // The final completion still counts, so bump the streak like the continuing path.
+                    repo.update(task.copy(done = true, completedAt = today, streak = task.streak + 1, recur = null, until = null))
                 } else {
                     // Series continues: snapshot this occurrence into history, then advance the
                     // recurring task to its next due date and bump the streak.
