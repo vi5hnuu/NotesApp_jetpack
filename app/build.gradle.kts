@@ -22,14 +22,14 @@ val realAdmobAppId = "ca-app-pub-4715945578201106~6871363399"
 
 android {
     namespace = "com.vi5hnu.notesapp"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.vi5hnu.notesapp"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 5
-        versionName = "1.0.5"
+        targetSdk = 36
+        versionCode = 6
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
